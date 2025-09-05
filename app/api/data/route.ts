@@ -19,7 +19,13 @@ export async function GET() {
     
     await doc.loadInfo(); // Loads the document properties and worksheets
     const sheet = doc.sheetsByTitle['algo_predictions'];
-    const rows = await sheet.getRows();
+    
+    // Get a larger range to ensure we capture all trading signals
+    // Read from A1 to H1000 to capture all columns and up to 1000 rows of data
+    await sheet.loadCells('A1:H1000');
+    
+    // Get all rows with data (this will now include all rows up to 1000)
+    const rows = await sheet.getRows({ limit: 1000, offset: 0 });
 
     const data = rows.map(row => row._rawData); // Extract the data from the rows
 
