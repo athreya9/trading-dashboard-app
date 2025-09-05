@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, TrendingUp, Target, DollarSign, AlertCircle, CheckCircle } from "lucide-react"
+import { Clock, TrendingUp, Target, DollarSign, AlertCircle, CheckCircle, Star } from "lucide-react"
 
 interface AdvisorData {
   systemStatus: "operational" | "warning" | "error"
   dataFreshness: number // seconds
   marketMood: "BULLISH" | "BEARISH" | "NEUTRAL"
+  lastUpdated: string // Added timestamp for trust building
   opportunity: {
     stock: string
     action: "STRONG BUY" | "BUY" | "SELL" | "STRONG SELL" | "HOLD"
@@ -36,6 +37,7 @@ export function PersonalTradingAdvisor() {
     systemStatus: "operational",
     dataFreshness: 45,
     marketMood: "BULLISH",
+    lastUpdated: new Date().toLocaleString(), // Initialize with current timestamp
     opportunity: {
       stock: "RELIANCE",
       action: "STRONG BUY",
@@ -64,6 +66,7 @@ export function PersonalTradingAdvisor() {
       setAdvisorData((prev) => ({
         ...prev,
         dataFreshness: Math.floor(Math.random() * 120) + 30, // 30-150 seconds
+        lastUpdated: new Date().toLocaleString(), // Update timestamp on each refresh
         opportunity: {
           ...prev.opportunity,
           confidence: Math.floor(Math.random() * 20) + 75, // 75-95%
@@ -94,29 +97,59 @@ export function PersonalTradingAdvisor() {
   const getActionColor = (action: string) => {
     switch (action) {
       case "STRONG BUY":
-        return "bg-green-600 text-white"
       case "BUY":
-        return "bg-green-500 text-white"
+        return "bg-green-600 text-white border-green-500" // Enhanced green styling for buy signals
       case "SELL":
-        return "bg-red-500 text-white"
       case "STRONG SELL":
-        return "bg-red-600 text-white"
+        return "bg-red-600 text-white border-red-500" // Enhanced red styling for sell signals
       case "HOLD":
-        return "bg-yellow-500 text-white"
+        return "bg-yellow-500 text-white border-yellow-400"
       default:
-        return "bg-gray-500 text-white"
+        return "bg-gray-500 text-white border-gray-400"
     }
   }
 
   return (
     <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 text-white shadow-2xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
-          <Target className="h-6 w-6" />
-          YOUR TRADING ADVISOR - LIVE STATUS
+        <CardTitle className="text-3xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
+          <Target className="h-8 w-8" />
+          AI Trading Advisor {/* Updated title to be more clear and commanding */}
         </CardTitle>
+        <div className="text-center text-sm text-gray-400">Last Updated: {advisorData.lastUpdated}</div>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg p-6 border-2 border-green-500/50 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+            <h2 className="text-2xl font-bold text-yellow-400">#1 TOP RECOMMENDATION</h2>
+          </div>
+
+          <div className="text-center mb-4">
+            <div className="text-green-400 font-bold text-xl">
+              ₹{advisorData.opportunity.entry.min}-{advisorData.opportunity.entry.max}
+            </div>
+            <div className="text-gray-300 text-sm">Entry Range</div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div className="bg-slate-800/50 rounded p-3">
+              <div className="text-green-400 font-bold text-xl">
+                ₹{advisorData.opportunity.entry.min}-{advisorData.opportunity.entry.max}
+              </div>
+              <div className="text-gray-300 text-sm">Entry Range</div>
+            </div>
+            <div className="bg-slate-800/50 rounded p-3">
+              <div className="text-green-400 font-bold text-xl">₹{advisorData.opportunity.target}</div>
+              <div className="text-gray-300 text-sm">Target Price</div>
+            </div>
+            <div className="bg-slate-800/50 rounded p-3">
+              <div className="text-yellow-400 font-bold text-xl">{advisorData.opportunity.riskRewardRatio}</div>
+              <div className="text-gray-300 text-sm">Risk/Reward</div>
+            </div>
+          </div>
+        </div>
+
         {/* System Status */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -137,16 +170,16 @@ export function PersonalTradingAdvisor() {
           <TrendingUp className="h-5 w-5 text-blue-400" />
           <span className="text-lg font-semibold">📈 Market Mood:</span>
           <Badge
-            className={`${advisorData.marketMood === "BULLISH" ? "bg-green-600" : advisorData.marketMood === "BEARISH" ? "bg-red-600" : "bg-yellow-600"} text-white`}
+            className={`${advisorData.marketMood === "BULLISH" ? "bg-green-600 border-green-500" : advisorData.marketMood === "BEARISH" ? "bg-red-600 border-red-500" : "bg-yellow-600 border-yellow-500"} text-white border-2`}
           >
             {advisorData.marketMood}
           </Badge>
           <span className="text-gray-300">(Nifty 50 is above 200-Day Average)</span>
         </div>
 
-        {/* Today's Top Opportunity */}
+        {/* Today's Detailed Analysis */}
         <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">💡 TODAY'S TOP OPPORTUNITY:</h3>
+          <h3 className="text-xl font-bold text-yellow-400 mb-4">💡 DETAILED ANALYSIS:</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
