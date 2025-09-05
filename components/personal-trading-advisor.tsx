@@ -113,13 +113,13 @@ export function PersonalTradingAdvisor() {
   const getRowColor = (action: string) => {
     switch (action) {
       case "BUY":
-        return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+        return "bg-green-100/10 dark:bg-green-900/30 border-l-4 border-l-green-500"
       case "SELL":
-        return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+        return "bg-red-100/10 dark:bg-red-900/30 border-l-4 border-l-red-500"
       case "HOLD":
-        return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+        return "bg-yellow-100/10 dark:bg-yellow-900/30 border-l-4 border-l-yellow-500"
       default:
-        return "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800"
+        return "bg-gray-100/10 dark:bg-gray-900/30 border-l-4 border-l-gray-500"
     }
   }
 
@@ -191,16 +191,16 @@ export function PersonalTradingAdvisor() {
                       <td className="p-3 text-white font-mono text-xs">{signal.Date}</td>
                       <td className="p-3 font-bold text-white">{signal.Stock}</td>
                       <td className="p-3 text-center">
-                        <Badge className={getActionColor(signal.Action)}>
-                          {signal.Action}
+                        <Badge className={`${getActionColor(signal.Action)} font-bold px-3 py-1 text-sm`}>
+                          {signal.Action === "BUY" ? "🟢 BUY" : signal.Action === "SELL" ? "🔴 SELL" : "🟡 HOLD"}
                         </Badge>
                       </td>
-                      <td className="p-3 text-right text-white">₹{signal.Price.toFixed(2)}</td>
+                      <td className="p-3 text-right text-white">₹{signal.Price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="p-3 text-right text-green-400">
-                        {signal.Target ? `₹${signal.Target.toFixed(2)}` : '-'}
+                        {signal.Target ? `₹${signal.Target.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
                       </td>
                       <td className="p-3 text-right text-red-400">
-                        {signal.StopLoss ? `₹${signal.StopLoss.toFixed(2)}` : '-'}
+                        {signal.StopLoss ? `₹${signal.StopLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
                       </td>
                       <td className="p-3 text-right text-white">
                         {signal.Confidence ? `${signal.Confidence.toFixed(0)}%` : '-'}
