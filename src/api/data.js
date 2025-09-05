@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     const doc = new GoogleSpreadsheet('1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo', serviceAccountAuth);
     
     await doc.loadInfo(); // Loads the document properties and worksheets
-    const sheet = doc.sheetsByTitle['Price Data'];
+    const sheet = doc.sheetsByTitle['algo_predictions'];
     const rows = await sheet.getRows();
 
     const data = rows.map(row => row._rawData); // Extract the data from the rows
