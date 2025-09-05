@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-react"
-import { AdvisorCard } from "@/components/advisor-card"
+import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
 
 interface NiftyData {
   currentPrice: number
@@ -189,7 +189,7 @@ export default function NiftyQuantumPlatform() {
           </div>
         </div>
 
-        <AdvisorCard />
+        <PersonalTradingAdvisor />
 
         <Card className="bg-card border-border shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">

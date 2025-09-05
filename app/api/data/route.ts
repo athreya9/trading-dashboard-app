@@ -1,14 +1,15 @@
-// This is your secure API endpoint.
+// This is your secure API endpoint for Next.js App Router
 // It will run as a serverless function on Vercel.
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import { NextResponse } from 'next/server';
 
-export default async function handler(req, res) {
+export async function GET() {
   try {
     // Authenticate using your secure environment variable
     const serviceAccountAuth = new JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_SERVICE_ACCOUNT_KEY.replace(/\\n/g, '\n'),
+      key: process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, '\n'),
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
       ],
@@ -22,8 +23,8 @@ export default async function handler(req, res) {
 
     const data = rows.map(row => row._rawData); // Extract the data from the rows
 
-    res.status(200).json({ data });
+    return NextResponse.json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
