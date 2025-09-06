@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-react"
 import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
+import { TradingChart } from "@/components/trading-chart"
+import { DailyTopTrades } from "@/components/daily-top-trades"
 
 interface NiftyData {
   currentPrice: number
@@ -190,6 +192,10 @@ export default function NiftyQuantumPlatform() {
         </div>
 
         <PersonalTradingAdvisor />
+
+        <DailyTopTrades />
+
+        <TradingChart symbol="NIFTY 50" />
 
         <Card className="bg-card border-border shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
