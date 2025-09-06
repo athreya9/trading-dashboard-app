@@ -19,74 +19,89 @@ interface TradeOpportunity {
 }
 
 export function DailyTopTrades() {
+  console.log("[v0] DailyTopTrades component initializing")
+
   const [trades, setTrades] = useState<TradeOpportunity[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    console.log("[v0] DailyTopTrades useEffect - fetching top trades")
+
     // Simulate fetching data from Google Sheets 'Top_Trades' tab
     const fetchTopTrades = async () => {
+      console.log("[v0] fetchTopTrades called")
       setIsLoading(true)
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      try {
+        // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Mock data - in real implementation, this would come from Google Sheets
-      const mockTrades: TradeOpportunity[] = [
-        {
-          stockName: "Reliance Industries",
-          symbol: "RELIANCE",
-          action: "BUY",
-          entryPrice: 2820,
-          stopLoss: 2790,
-          targetPrice: 2880,
-          riskRewardRatio: "1:2.0",
-          confidenceScore: 87,
-          reason: "SMA Crossover + High Volume",
-        },
-        {
-          stockName: "HDFC Bank",
-          symbol: "HDFCBANK",
-          action: "BUY",
-          entryPrice: 1650,
-          stopLoss: 1620,
-          targetPrice: 1720,
-          riskRewardRatio: "1:2.3",
-          confidenceScore: 82,
-          reason: "Breakout Above Resistance",
-        },
-        {
-          stockName: "Infosys",
-          symbol: "INFY",
-          action: "SELL",
-          entryPrice: 1420,
-          stopLoss: 1450,
-          targetPrice: 1360,
-          riskRewardRatio: "1:2.0",
-          confidenceScore: 79,
-          reason: "Bearish Divergence + Overbought",
-        },
-        {
-          stockName: "Tata Consultancy Services",
-          symbol: "TCS",
-          action: "BUY",
-          entryPrice: 3850,
-          stopLoss: 3800,
-          targetPrice: 3950,
-          riskRewardRatio: "1:2.0",
-          confidenceScore: 75,
-          reason: "Support Level Bounce",
-        },
-      ]
+        // Mock data - in real implementation, this would come from Google Sheets
+        const mockTrades: TradeOpportunity[] = [
+          {
+            stockName: "Reliance Industries",
+            symbol: "RELIANCE",
+            action: "BUY",
+            entryPrice: 2820,
+            stopLoss: 2790,
+            targetPrice: 2880,
+            riskRewardRatio: "1:2.0",
+            confidenceScore: 87,
+            reason: "SMA Crossover + High Volume",
+          },
+          {
+            stockName: "HDFC Bank",
+            symbol: "HDFCBANK",
+            action: "BUY",
+            entryPrice: 1650,
+            stopLoss: 1620,
+            targetPrice: 1720,
+            riskRewardRatio: "1:2.3",
+            confidenceScore: 82,
+            reason: "Breakout Above Resistance",
+          },
+          {
+            stockName: "Infosys",
+            symbol: "INFY",
+            action: "SELL",
+            entryPrice: 1420,
+            stopLoss: 1450,
+            targetPrice: 1360,
+            riskRewardRatio: "1:2.0",
+            confidenceScore: 79,
+            reason: "Bearish Divergence + Overbought",
+          },
+          {
+            stockName: "Tata Consultancy Services",
+            symbol: "TCS",
+            action: "BUY",
+            entryPrice: 3850,
+            stopLoss: 3800,
+            targetPrice: 3950,
+            riskRewardRatio: "1:2.0",
+            confidenceScore: 75,
+            reason: "Support Level Bounce",
+          },
+        ]
 
-      // Filter for high-confidence trades (>70%)
-      const highConfidenceTrades = mockTrades.filter((trade) => trade.confidenceScore > 70)
+        // Filter for high-confidence trades (>70%)
+        const highConfidenceTrades = mockTrades.filter((trade) => trade.confidenceScore > 70)
 
-      setTrades(highConfidenceTrades.slice(0, 5)) // Maximum 5 trades
-      setIsLoading(false)
+        console.log("[v0] Filtered high confidence trades:", highConfidenceTrades.length)
+
+        setTrades(highConfidenceTrades.slice(0, 5)) // Maximum 5 trades
+        console.log("[v0] Top trades data loaded successfully")
+      } catch (error) {
+        console.error("[v0] Error in fetchTopTrades:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchTopTrades()
   }, [])
+
+  console.log("[v0] DailyTopTrades rendering, trades count:", trades.length, "isLoading:", isLoading)
 
   if (isLoading) {
     return (

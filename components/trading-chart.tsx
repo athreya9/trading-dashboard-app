@@ -1,14 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import {
-  createChart,
-  ColorType,
-  type IChartApi,
-  type ISeriesApi,
-  type CandlestickData,
-  type LineData,
-} from "lightweight-charts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp } from "lucide-react"
@@ -17,36 +9,21 @@ interface TradingChartProps {
   symbol?: string
 }
 
-interface SignalMarker {
-  time: string
-  position: "aboveBar" | "belowBar"
-  color: string
-  shape: "arrowUp" | "arrowDown"
-  text: string
-}
-
 export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<IChartApi | null>(null)
-  const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null)
-  const sma50SeriesRef = useRef<ISeriesApi<"Line"> | null>(null)
-  const sma200SeriesRef = useRef<ISeriesApi<"Line"> | null>(null)
+  console.log("[v0] TradingChart component initializing for symbol:", symbol)
+
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [chartData, setChartData] = useState<any[]>([])
 
-  // Generate mock historical data
   const generateMockData = () => {
-    const data: CandlestickData[] = []
-    const sma50Data: LineData[] = []
-    const sma200Data: LineData[] = []
+    const data = []
     let basePrice = 2800
-    const prices: number[] = []
 
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 50; i++) {
       const date = new Date()
-      date.setDate(date.getDate() - (200 - i))
-      const time = date.toISOString().split("T")[0] as any
+      date.setDate(date.getDate() - (50 - i))
 
-      // Generate realistic price movement
       const change = (Math.random() - 0.5) * 40
       basePrice = Math.max(2500, Math.min(3200, basePrice + change))
 
@@ -56,170 +33,162 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
       const low = open - Math.random() * volatility
       const close = low + Math.random() * (high - low)
 
-      prices.push(close)
-
       data.push({
-        time,
+        date: date.toLocaleDateString(),
         open,
         high,
         low,
         close,
+        volume: Math.floor(Math.random() * 1000000) + 500000,
       })
-
-      // Calculate SMAs
-      if (i >= 49) {
-        const sma50 = prices.slice(-50).reduce((a, b) => a + b, 0) / 50
-        sma50Data.push({ time, value: sma50 })
-      }
-
-      if (i >= 199) {
-        const sma200 = prices.slice(-200).reduce((a, b) => a + b, 0) / 200
-        sma200Data.push({ time, value: sma200 })
-      }
 
       basePrice = close
     }
 
-    return { candlestickData: data, sma50Data, sma200Data }
+    return data
   }
 
-  const initializeChart = () => {
-    if (!chartContainerRef.current) return
+  const drawChart = () => {
+    console.log("[v0] drawChart called, chartData length:", chartData.length)
 
-    // Create chart
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#d1d5db",
-      },
-      grid: {
-        vertLines: { color: "#374151" },
-        horzLines: { color: "#374151" },
-      },
-      crosshair: {
-        mode: 1,
-      },
-      rightPriceScale: {
-        borderColor: "#485563",
-      },
-      timeScale: {
-        borderColor: "#485563",
-        timeVisible: true,
-        secondsVisible: false,
-      },
-      width: chartContainerRef.current.clientWidth,
-      height: 400,
-    })
-
-    chartRef.current = chart
-
-    // Add candlestick series
-    const candlestickSeries = chart.addCandlestickSeries({
-      upColor: "#22c55e",
-      downColor: "#ef4444",
-      borderDownColor: "#ef4444",
-      borderUpColor: "#22c55e",
-      wickDownColor: "#ef4444",
-      wickUpColor: "#22c55e",
-    })
-
-    candlestickSeriesRef.current = candlestickSeries
-
-    // Add SMA lines
-    const sma50Series = chart.addLineSeries({
-      color: "#3b82f6",
-      lineWidth: 2,
-      title: "SMA 50",
-    })
-
-    const sma200Series = chart.addLineSeries({
-      color: "#f59e0b",
-      lineWidth: 2,
-      title: "SMA 200",
-    })
-
-    sma50SeriesRef.current = sma50Series
-    sma200SeriesRef.current = sma200Series
-
-    // Load initial data
-    loadChartData()
-
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current && chart) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-        })
-      }
+    const canvas = canvasRef.current
+    if (!canvas) {
+      console.log("[v0] Canvas ref not available")
+      return
     }
 
-    window.addEventListener("resize", handleResize)
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      console.log("[v0] Canvas context not available")
+      return
+    }
 
-    return () => {
-      window.removeEventListener("resize", handleResize)
-      chart.remove()
+    try {
+      // Set canvas size
+      canvas.width = canvas.offsetWidth * 2
+      canvas.height = 400 * 2
+      ctx.scale(2, 2)
+
+      // Clear canvas
+      ctx.fillStyle = "#1f2937"
+      ctx.fillRect(0, 0, canvas.offsetWidth, 400)
+
+      if (chartData.length === 0) {
+        console.log("[v0] No chart data available")
+        return
+      }
+
+      // Calculate price range
+      const prices = chartData.flatMap((d) => [d.high, d.low])
+      const minPrice = Math.min(...prices)
+      const maxPrice = Math.max(...prices)
+      const priceRange = maxPrice - minPrice
+
+      // Draw candlesticks
+      const candleWidth = (canvas.offsetWidth - 80) / chartData.length
+
+      chartData.forEach((data, index) => {
+        const x = 40 + index * candleWidth
+        const openY = 350 - ((data.open - minPrice) / priceRange) * 300
+        const closeY = 350 - ((data.close - minPrice) / priceRange) * 300
+        const highY = 350 - ((data.high - minPrice) / priceRange) * 300
+        const lowY = 350 - ((data.low - minPrice) / priceRange) * 300
+
+        // Draw wick
+        ctx.strokeStyle = data.close >= data.open ? "#22c55e" : "#ef4444"
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x + candleWidth / 2, highY)
+        ctx.lineTo(x + candleWidth / 2, lowY)
+        ctx.stroke()
+
+        // Draw body
+        ctx.fillStyle = data.close >= data.open ? "#22c55e" : "#ef4444"
+        const bodyHeight = Math.abs(closeY - openY)
+        const bodyY = Math.min(openY, closeY)
+        ctx.fillRect(x + 2, bodyY, candleWidth - 4, Math.max(bodyHeight, 1))
+      })
+
+      // Draw price labels
+      ctx.fillStyle = "#9ca3af"
+      ctx.font = "12px sans-serif"
+      ctx.textAlign = "right"
+
+      for (let i = 0; i <= 5; i++) {
+        const price = minPrice + (priceRange * i) / 5
+        const y = 350 - i * 60
+        ctx.fillText(`₹${price.toFixed(0)}`, 35, y + 4)
+      }
+
+      // Draw signals
+      if (chartData.length > 10) {
+        // Buy signal
+        const buyIndex = chartData.length - 10
+        const buyX = 40 + buyIndex * candleWidth + candleWidth / 2
+        const buyY = 350 - ((chartData[buyIndex].low - minPrice) / priceRange) * 300 + 20
+
+        ctx.fillStyle = "#22c55e"
+        ctx.beginPath()
+        ctx.moveTo(buyX, buyY)
+        ctx.lineTo(buyX - 8, buyY + 15)
+        ctx.lineTo(buyX + 8, buyY + 15)
+        ctx.closePath()
+        ctx.fill()
+
+        // Sell signal
+        const sellIndex = chartData.length - 5
+        const sellX = 40 + sellIndex * candleWidth + candleWidth / 2
+        const sellY = 350 - ((chartData[sellIndex].high - minPrice) / priceRange) * 300 - 20
+
+        ctx.fillStyle = "#ef4444"
+        ctx.beginPath()
+        ctx.moveTo(sellX, sellY)
+        ctx.lineTo(sellX - 8, sellY - 15)
+        ctx.lineTo(sellX + 8, sellY - 15)
+        ctx.closePath()
+        ctx.fill()
+      }
+
+      console.log("[v0] Chart drawing completed successfully")
+    } catch (error) {
+      console.error("[v0] Error in drawChart:", error)
     }
   }
 
   const loadChartData = async () => {
+    console.log("[v0] loadChartData called")
     setIsLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const { candlestickData, sma50Data, sma200Data } = generateMockData()
-
-      // Set data to series
-      if (candlestickSeriesRef.current) {
-        candlestickSeriesRef.current.setData(candlestickData)
-
-        // Add buy/sell signal markers
-        const markers = [
-          {
-            time: candlestickData[candlestickData.length - 10].time,
-            position: "belowBar" as const,
-            color: "#22c55e",
-            shape: "arrowUp" as const,
-            text: "BUY",
-          },
-          {
-            time: candlestickData[candlestickData.length - 5].time,
-            position: "aboveBar" as const,
-            color: "#ef4444",
-            shape: "arrowDown" as const,
-            text: "SELL",
-          },
-        ]
-
-        candlestickSeriesRef.current.setMarkers(markers)
-      }
-
-      if (sma50SeriesRef.current) {
-        sma50SeriesRef.current.setData(sma50Data)
-      }
-
-      if (sma200SeriesRef.current) {
-        sma200SeriesRef.current.setData(sma200Data)
-      }
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      const data = generateMockData()
+      console.log("[v0] Generated mock data, length:", data.length)
+      setChartData(data)
     } catch (error) {
-      console.error("Error loading chart data:", error)
+      console.error("[v0] Error loading chart data:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    const cleanup = initializeChart()
-    return cleanup
+    console.log("[v0] TradingChart useEffect - loading chart data")
+    loadChartData()
   }, [])
+
+  useEffect(() => {
+    console.log("[v0] TradingChart useEffect - drawing chart")
+    drawChart()
+  }, [chartData])
+
+  console.log("[v0] TradingChart rendering")
 
   return (
     <Card className="bg-card border-border shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-card-foreground flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-500" />
-          {symbol} - Candlestick Chart
+          {symbol} - Price Chart
         </CardTitle>
         <Button onClick={loadChartData} disabled={isLoading} size="sm" variant="outline">
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
@@ -227,22 +196,26 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
         </Button>
       </CardHeader>
       <CardContent>
-        <div ref={chartContainerRef} className="w-full h-[400px] bg-background rounded-lg" />
+        <canvas
+          ref={canvasRef}
+          className="w-full h-[400px] bg-gray-900 rounded-lg"
+          style={{ width: "100%", height: "400px" }}
+        />
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-blue-500"></div>
-            <span>SMA 50</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-amber-500"></div>
-            <span>SMA 200</span>
-          </div>
-          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-            <span>Buy Signal</span>
+            <span>Bullish Candle</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+            <span>Bearish Candle</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-green-500"></div>
+            <span>Buy Signal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-red-500"></div>
             <span>Sell Signal</span>
           </div>
         </div>
