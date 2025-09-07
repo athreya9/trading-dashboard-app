@@ -16,36 +16,31 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [chartData, setChartData] = useState<any[]>([])
 
-  const generateMockData = () => {
-    const data = []
-    let basePrice = 2800
-
-    for (let i = 0; i < 50; i++) {
-      const date = new Date()
-      date.setDate(date.getDate() - (50 - i))
-
-      const change = (Math.random() - 0.5) * 40
-      basePrice = Math.max(2500, Math.min(3200, basePrice + change))
-
-      const open = basePrice
-      const volatility = 20
-      const high = open + Math.random() * volatility
-      const low = open - Math.random() * volatility
-      const close = low + Math.random() * (high - low)
-
-      data.push({
-        date: date.toLocaleDateString(),
-        open,
-        high,
-        low,
-        close,
-        volume: Math.floor(Math.random() * 1000000) + 500000,
-      })
-
-      basePrice = close
+  const fetchRealChartData = async () => {
+    try {
+      // Fetch real data from Google Sheets API
+      const response = await fetch('/api/data')
+      const result = await response.json()
+      
+      if (result.data && result.data.length > 0) {
+        // Convert Google Sheets data to chart format
+        // Assuming columns include: Date, Symbol, Price, High, Low, Open, Close, Volume
+        const chartData = result.data.slice(1).map((row: any[]) => ({
+          date: row[0] || new Date().toLocaleDateString(),
+          open: parseFloat(row[5]) || 0,
+          high: parseFloat(row[3]) || 0,
+          low: parseFloat(row[4]) || 0,
+          close: parseFloat(row[2]) || 0,
+          volume: parseFloat(row[8]) || 0,
+        })).filter((item: any) => item.close > 0)
+        
+        return chartData.slice(-50) // Get last 50 data points
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching chart data:", error)
     }
-
-    return data
+    
+    return []
   }
 
   const drawChart = () => {
@@ -160,12 +155,12 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      const data = generateMockData()
-      console.log("[v0] Generated mock data, length:", data.length)
+      const data = await fetchRealChartData()
+      console.log("[v0] Fetched real chart data, length:", data.length)
       setChartData(data)
     } catch (error) {
       console.error("[v0] Error loading chart data:", error)
+      setChartData([]) // Set empty array on error
     } finally {
       setIsLoading(false)
     }

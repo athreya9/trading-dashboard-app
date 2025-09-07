@@ -36,56 +36,31 @@ export function DailyTopTrades() {
         // Simulate API delay
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        // Mock data - in real implementation, this would come from Google Sheets
-        const mockTrades: TradeOpportunity[] = [
-          {
-            stockName: "Reliance Industries",
-            symbol: "RELIANCE",
-            action: "BUY",
-            entryPrice: 2820,
-            stopLoss: 2790,
-            targetPrice: 2880,
-            riskRewardRatio: "1:2.0",
-            confidenceScore: 87,
-            reason: "SMA Crossover + High Volume",
-          },
-          {
-            stockName: "HDFC Bank",
-            symbol: "HDFCBANK",
-            action: "BUY",
-            entryPrice: 1650,
-            stopLoss: 1620,
-            targetPrice: 1720,
-            riskRewardRatio: "1:2.3",
-            confidenceScore: 82,
-            reason: "Breakout Above Resistance",
-          },
-          {
-            stockName: "Infosys",
-            symbol: "INFY",
-            action: "SELL",
-            entryPrice: 1420,
-            stopLoss: 1450,
-            targetPrice: 1360,
-            riskRewardRatio: "1:2.0",
-            confidenceScore: 79,
-            reason: "Bearish Divergence + Overbought",
-          },
-          {
-            stockName: "Tata Consultancy Services",
-            symbol: "TCS",
-            action: "BUY",
-            entryPrice: 3850,
-            stopLoss: 3800,
-            targetPrice: 3950,
-            riskRewardRatio: "1:2.0",
-            confidenceScore: 75,
-            reason: "Support Level Bounce",
-          },
-        ]
-
-        // Filter for high-confidence trades (>70%)
-        const highConfidenceTrades = mockTrades.filter((trade) => trade.confidenceScore > 70)
+        // Fetch real data from Google Sheets API
+        const response = await fetch('/api/data')
+        const result = await response.json()
+        
+        let highConfidenceTrades: TradeOpportunity[] = []
+        
+        if (result.data && result.data.length > 0) {
+          // Convert Google Sheets data to TradeOpportunity format
+          // Assuming columns: Date, Stock, Action, Price, Target, StopLoss, Confidence, Reason
+          const tradesFromSheet = result.data.slice(1).map((row: any[]) => ({
+            stockName: row[1] || '',
+            symbol: row[1] || '',
+            action: row[2] as "BUY" | "SELL" || 'BUY',
+            entryPrice: parseFloat(row[3]) || 0,
+            targetPrice: parseFloat(row[4]) || 0,
+            stopLoss: parseFloat(row[5]) || 0,
+            confidenceScore: parseFloat(row[6]) || 0,
+            reason: row[7] || 'Technical Analysis',
+            riskRewardRatio: '1:2.0', // Calculate or provide from sheet
+          })).filter((trade: TradeOpportunity) => 
+            trade.confidenceScore > 70 && trade.entryPrice > 0
+          )
+          
+          highConfidenceTrades = tradesFromSheet
+        }
 
         console.log("[v0] Filtered high confidence trades:", highConfidenceTrades.length)
 
