@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, TrendingUp, Target, DollarSign, AlertCircle, CheckCircle, RefreshCw } from "lucide-react"
+import { Clock, Target, AlertCircle, CheckCircle, RefreshCw } from "lucide-react"
 
 interface TradingSignal {
   Date: string
@@ -161,7 +161,7 @@ export function PersonalTradingAdvisor() {
         <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
           <h3 className="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
             <Target className="h-5 w-5" />
-            💡 LIVE TRADING SIGNALS FROM ALGO_PREDICTIONS:
+            💡 LIVE TRADING SIGNALS FROM ADVISOR_OUTPUT:
           </h3>
 
           {advisorData.signals.length === 0 ? (
