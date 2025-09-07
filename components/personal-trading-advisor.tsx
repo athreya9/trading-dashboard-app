@@ -29,12 +29,12 @@ interface AdvisorData {
 export function PersonalTradingAdvisor() {
   const [advisorData, setAdvisorData] = useState<AdvisorData>({
     systemStatus: "operational",
-    dataFreshness: 45,
-    marketMood: "BULLISH",
+    dataFreshness: 0,
+    marketMood: "NEUTRAL",
     signals: [],
     timeline: {
-      signalGenerated: "10:15:32 AM",
-      nextCheck: "10:20:00 AM",
+      signalGenerated: "Loading...",
+      nextCheck: "Loading...",
     },
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -42,30 +42,65 @@ export function PersonalTradingAdvisor() {
   const fetchTradingData = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/data')
+      // Use the comprehensive advice API endpoint
+      const response = await fetch('/api/advice')
       const result = await response.json()
-      
-      if (result.data && result.data.length > 0) {
-        // Convert the raw data to TradingSignal format
-        const signals: TradingSignal[] = result.data.slice(1).map((row: any[]) => ({
-          Date: row[0] || '',
-          Stock: row[1] || '',
-          Action: row[2] as "BUY" | "SELL" | "HOLD" || 'HOLD',
-          Price: parseFloat(row[3]) || 0,
-          Target: row[4] ? parseFloat(row[4]) : undefined,
-          StopLoss: row[5] ? parseFloat(row[5]) : undefined,
-          Confidence: row[6] ? parseFloat(row[6]) : undefined,
-        }))
+
+      if (result.success && result.allRecommendations) {
+        // Convert the structured advice data to TradingSignal format
+        const signals: TradingSignal[] = result.allRecommendations.map((rec: any) => ({
+          Date: rec.timestamp || new Date().toISOString(),
+          Stock: rec.stock || '',
+          Action: rec.action as "BUY" | "SELL" | "HOLD" || 'HOLD',
+          Price: rec.price || 0,
+          Target: rec.target || undefined,
+          StopLoss: rec.stopLoss || undefined,
+          Confidence: rec.confidence || undefined,
+        })).filter((signal: TradingSignal) => signal.Stock && signal.Price > 0)
+
+        // Determine market mood based on signals
+        const buySignals = signals.filter(s => s.Action === 'BUY').length
+        const sellSignals = signals.filter(s => s.Action === 'SELL').length
+        const marketMood = buySignals > sellSignals ? 'BULLISH' : sellSignals > buySignals ? 'BEARISH' : 'NEUTRAL'
 
         setAdvisorData(prev => ({
           ...prev,
           signals: signals.slice(0, 10), // Show latest 10 signals
           dataFreshness: 0,
+          marketMood: marketMood as "BULLISH" | "BEARISH" | "NEUTRAL",
+          systemStatus: "operational",
           timeline: {
             signalGenerated: new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 5 * 60000).toLocaleTimeString(),
+            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(), // 30 minutes from now
           },
         }))
+      } else {
+        // Fallback to the basic data API if advice API fails
+        const dataResponse = await fetch('/api/data')
+        const dataResult = await dataResponse.json()
+
+        if (dataResult.data && dataResult.data.length > 0) {
+          const signals: TradingSignal[] = dataResult.data.slice(1).map((row: any[]) => ({
+            Date: row[0] || '',
+            Stock: row[1] || '',
+            Action: row[2] as "BUY" | "SELL" | "HOLD" || 'HOLD',
+            Price: parseFloat(row[3]) || 0,
+            Target: row[4] ? parseFloat(row[4]) : undefined,
+            StopLoss: row[5] ? parseFloat(row[5]) : undefined,
+            Confidence: row[6] ? parseFloat(row[6]) : undefined,
+          })).filter((signal: TradingSignal) => signal.Stock && signal.Price > 0)
+
+          setAdvisorData(prev => ({
+            ...prev,
+            signals: signals.slice(0, 10),
+            dataFreshness: 0,
+            systemStatus: "operational",
+            timeline: {
+              signalGenerated: new Date().toLocaleTimeString(),
+              nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
+            },
+          }))
+        }
       }
     } catch (error) {
       console.error('Error fetching trading data:', error)

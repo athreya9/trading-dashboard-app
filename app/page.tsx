@@ -7,6 +7,7 @@ import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-re
 import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
 import { TradingChart } from "@/components/trading-chart"
 import { DailyTopTrades } from "@/components/daily-top-trades"
+import { TradingBotControl } from "@/components/trading-bot-control"
 
 interface NiftyData {
   currentPrice: number
@@ -129,6 +130,8 @@ export default function NiftyQuantumPlatform() {
             </Card>
           </div>
         </div>
+
+        <TradingBotControl />
 
         <PersonalTradingAdvisor />
 
