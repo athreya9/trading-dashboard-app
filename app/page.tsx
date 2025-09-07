@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-react"
@@ -89,9 +90,26 @@ export default function NiftyQuantumPlatform() {
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight text-balance">
-            DA Trading Dashboard
-          </h1>
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <Image 
+                src="/da-logo.svg" 
+                alt="DA Logo" 
+                width={80}
+                height={80}
+                className="h-16 w-16 md:h-20 md:w-20 object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+                Trading Dashboard
+              </h1>
+              <p className="text-sm md:text-base text-muted-foreground font-medium">
+                Algorithmic Trading Intelligence Platform
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card className="bg-card border-border">

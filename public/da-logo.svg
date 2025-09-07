@@ -1,0 +1,15 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue D with brush stroke effect -->
+  <path d="M15 20 Q12 18 10 20 L10 100 Q10 102 12 100 L45 100 Q65 100 75 90 Q85 80 85 60 Q85 40 75 30 Q65 20 45 20 Z M20 30 L45 30 Q55 30 60 35 Q65 40 65 60 Q65 80 60 85 Q55 90 45 90 L20 90 Z" 
+        fill="#2563eb" 
+        stroke="#1d4ed8" 
+        stroke-width="1"/>
+  
+  <!-- Orange A with brush stroke effect and slight rotation -->
+  <g transform="translate(35, 5) rotate(8)">
+    <path d="M25 20 Q23 18 20 20 L35 100 Q37 102 40 100 L45 85 L65 85 L70 100 Q72 102 75 100 L60 20 Q58 18 55 20 Z M50 45 L60 70 L40 70 Z" 
+          fill="#ea580c" 
+          stroke="#c2410c" 
+          stroke-width="1"/>
+  </g>
+</svg>
