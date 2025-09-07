@@ -18,20 +18,19 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
 
   const fetchRealChartData = async () => {
     try {
-      // Fetch real data from Google Sheets API
-      const response = await fetch('/api/data')
-      const result = await response.json()
+      // Use OpenSheet API to directly access Google Sheets data
+      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+      const data = await response.json()
       
-      if (result.data && result.data.length > 0) {
-        // Convert Google Sheets data to chart format
-        // Assuming columns include: Date, Symbol, Price, High, Low, Open, Close, Volume
-        const chartData = result.data.slice(1).map((row: any[]) => ({
-          date: row[0] || new Date().toLocaleDateString(),
-          open: parseFloat(row[5]) || 0,
-          high: parseFloat(row[3]) || 0,
-          low: parseFloat(row[4]) || 0,
-          close: parseFloat(row[2]) || 0,
-          volume: parseFloat(row[8]) || 0,
+      if (data && data.length > 0) {
+        // Convert OpenSheet data to chart format
+        const chartData = data.map((row: any) => ({
+          date: row.Date || new Date().toLocaleDateString(),
+          open: parseFloat(row.Open || row.OpenPrice || row.Price || '0') || 0,
+          high: parseFloat(row.High || row.Price || '0') || 0,
+          low: parseFloat(row.Low || row.Price || '0') || 0,
+          close: parseFloat(row.Price || row.Close || '0') || 0,
+          volume: parseFloat(row.Volume || '0') || 0,
         })).filter((item: any) => item.close > 0)
         
         return chartData.slice(-50) // Get last 50 data points

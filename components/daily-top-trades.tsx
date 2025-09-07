@@ -36,25 +36,24 @@ export function DailyTopTrades() {
         // Simulate API delay
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        // Fetch real data from Google Sheets API
-        const response = await fetch('/api/data')
-        const result = await response.json()
+        // Use OpenSheet API to directly access Google Sheets data
+        const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+        const data = await response.json()
         
         let highConfidenceTrades: TradeOpportunity[] = []
         
-        if (result.data && result.data.length > 0) {
-          // Convert Google Sheets data to TradeOpportunity format
-          // Assuming columns: Date, Stock, Action, Price, Target, StopLoss, Confidence, Reason
-          const tradesFromSheet = result.data.slice(1).map((row: any[]) => ({
-            stockName: row[1] || '',
-            symbol: row[1] || '',
-            action: row[2] as "BUY" | "SELL" || 'BUY',
-            entryPrice: parseFloat(row[3]) || 0,
-            targetPrice: parseFloat(row[4]) || 0,
-            stopLoss: parseFloat(row[5]) || 0,
-            confidenceScore: parseFloat(row[6]) || 0,
-            reason: row[7] || 'Technical Analysis',
-            riskRewardRatio: '1:2.0', // Calculate or provide from sheet
+        if (data && data.length > 0) {
+          // Convert OpenSheet data to TradeOpportunity format
+          const tradesFromSheet = data.map((row: any) => ({
+            stockName: row.Stock || row.Symbol || '',
+            symbol: row.Stock || row.Symbol || '',
+            action: (row.Action || 'BUY') as "BUY" | "SELL",
+            entryPrice: parseFloat(row.Price || row.EntryPrice || '0') || 0,
+            targetPrice: parseFloat(row.Target || row.TargetPrice || '0') || 0,
+            stopLoss: parseFloat(row.StopLoss || '0') || 0,
+            confidenceScore: parseFloat(row.Confidence || '0') || 0,
+            reason: row.Reason || row.Recommendation || 'Technical Analysis',
+            riskRewardRatio: row.RiskReward || '1:2.0',
           })).filter((trade: TradeOpportunity) => 
             trade.confidenceScore > 70 && trade.entryPrice > 0
           )

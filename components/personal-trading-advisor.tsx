@@ -42,20 +42,20 @@ export function PersonalTradingAdvisor() {
   const fetchTradingData = async () => {
     setIsLoading(true)
     try {
-      // Use the comprehensive advice API endpoint
-      const response = await fetch('/api/advice')
-      const result = await response.json()
+      // Use OpenSheet API to directly access Google Sheets data
+      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+      const data = await response.json()
 
-      if (result.success && result.allRecommendations) {
-        // Convert the structured advice data to TradingSignal format
-        const signals: TradingSignal[] = result.allRecommendations.map((rec: any) => ({
-          Date: rec.timestamp || new Date().toISOString(),
-          Stock: rec.stock || '',
-          Action: rec.action as "BUY" | "SELL" | "HOLD" || 'HOLD',
-          Price: rec.price || 0,
-          Target: rec.target || undefined,
-          StopLoss: rec.stopLoss || undefined,
-          Confidence: rec.confidence || undefined,
+      if (data && data.length > 0) {
+        // Convert OpenSheet data to TradingSignal format
+        const signals: TradingSignal[] = data.map((row: any) => ({
+          Date: row.Date || new Date().toLocaleDateString(),
+          Stock: row.Stock || row.Symbol || '',
+          Action: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
+          Price: parseFloat(row.Price || row.EntryPrice || '0') || 0,
+          Target: row.Target ? parseFloat(row.Target) : undefined,
+          StopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
+          Confidence: row.Confidence ? parseFloat(row.Confidence) : undefined,
         })).filter((signal: TradingSignal) => signal.Stock && signal.Price > 0)
 
         // Determine market mood based on signals
@@ -75,32 +75,11 @@ export function PersonalTradingAdvisor() {
           },
         }))
       } else {
-        // Fallback to the basic data API if advice API fails
-        const dataResponse = await fetch('/api/data')
-        const dataResult = await dataResponse.json()
-
-        if (dataResult.data && dataResult.data.length > 0) {
-          const signals: TradingSignal[] = dataResult.data.slice(1).map((row: any[]) => ({
-            Date: row[0] || '',
-            Stock: row[1] || '',
-            Action: row[2] as "BUY" | "SELL" | "HOLD" || 'HOLD',
-            Price: parseFloat(row[3]) || 0,
-            Target: row[4] ? parseFloat(row[4]) : undefined,
-            StopLoss: row[5] ? parseFloat(row[5]) : undefined,
-            Confidence: row[6] ? parseFloat(row[6]) : undefined,
-          })).filter((signal: TradingSignal) => signal.Stock && signal.Price > 0)
-
-          setAdvisorData(prev => ({
-            ...prev,
-            signals: signals.slice(0, 10),
-            dataFreshness: 0,
-            systemStatus: "operational",
-            timeline: {
-              signalGenerated: new Date().toLocaleTimeString(),
-              nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
-            },
-          }))
-        }
+        setAdvisorData(prev => ({
+          ...prev,
+          systemStatus: "operational",
+          signals: [],
+        }))
       }
     } catch (error) {
       console.error('Error fetching trading data:', error)

@@ -56,24 +56,21 @@ export default function NiftyQuantumPlatform() {
     setIsRefreshing(true)
 
     try {
-      // Fetch real data from Google Sheets API
-      const response = await fetch('/api/data')
-      const result = await response.json()
+      // Use OpenSheet API to directly access Google Sheets data
+      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+      const data = await response.json()
       
-      if (result.data && result.data.length > 0) {
-        // Parse the data from Google Sheets
-        // Assuming the sheet has columns: Date, Symbol, Price, High, Low, Open, Close, etc.
-        const latestRow = result.data[result.data.length - 1] // Get the latest data
+      if (data && data.length > 0) {
+        // Get the latest row of data
+        const latestRow = data[data.length - 1]
         
-        if (latestRow && latestRow.length >= 6) {
-          setNiftyData({
-            currentPrice: parseFloat(latestRow[2]) || 0,
-            todaysHigh: parseFloat(latestRow[3]) || 0,
-            todaysLow: parseFloat(latestRow[4]) || 0,
-            openingPrice: parseFloat(latestRow[5]) || 0,
-            previousClose: parseFloat(latestRow[6]) || 0,
-          })
-        }
+        setNiftyData({
+          currentPrice: parseFloat(latestRow.Price || latestRow.CurrentPrice || '0') || 0,
+          todaysHigh: parseFloat(latestRow.High || latestRow.TodaysHigh || '0') || 0,
+          todaysLow: parseFloat(latestRow.Low || latestRow.TodaysLow || '0') || 0,
+          openingPrice: parseFloat(latestRow.Open || latestRow.OpeningPrice || '0') || 0,
+          previousClose: parseFloat(latestRow.PreviousClose || latestRow.PrevClose || '0') || 0,
+        })
       }
 
       console.log("[v0] Data refresh completed successfully")
