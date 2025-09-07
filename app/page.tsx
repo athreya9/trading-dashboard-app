@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-react"
 import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
+import { TradingChart } from "@/components/trading-chart"
+import { DailyTopTrades } from "@/components/daily-top-trades"
 
 interface NiftyData {
   currentPrice: number
@@ -37,6 +39,8 @@ interface PerformanceData {
 }
 
 export default function NiftyQuantumPlatform() {
+  console.log("[v0] NiftyQuantumPlatform component initializing")
+
   const [niftyData, setNiftyData] = useState<NiftyData>({
     currentPrice: 21850.75,
     todaysHigh: 21920.5,
@@ -92,56 +96,72 @@ export default function NiftyQuantumPlatform() {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
+    console.log("[v0] Setting up auto-refresh interval")
     const interval = setInterval(() => {
+      console.log("[v0] Auto-refresh triggered")
       refreshData()
     }, 5000) // Auto-refresh every 5 seconds as specified
 
-    return () => clearInterval(interval)
+    return () => {
+      console.log("[v0] Cleaning up auto-refresh interval")
+      clearInterval(interval)
+    }
   }, [])
 
   const refreshData = async () => {
+    console.log("[v0] refreshData called")
     setIsRefreshing(true)
 
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const priceChange = (Math.random() - 0.5) * 50 // ±25 points
-    const newPrice = Math.max(21500, Math.min(22200, niftyData.currentPrice + priceChange))
+    try {
+      const priceChange = (Math.random() - 0.5) * 50 // ±25 points
+      const newPrice = Math.max(21500, Math.min(22200, niftyData.currentPrice + priceChange))
 
-    setNiftyData((prev) => ({
-      currentPrice: newPrice,
-      todaysHigh: Math.max(prev.todaysHigh, newPrice),
-      todaysLow: Math.min(prev.todaysLow, newPrice),
-      openingPrice: prev.openingPrice,
-      previousClose: prev.previousClose,
-    }))
+      console.log("[v0] Updating nifty data, new price:", newPrice)
 
-    setOptionsData((prev) =>
-      prev.map((option) => ({
-        ...option,
-        calls: {
-          ...option.calls,
-          oi: Math.max(50000, option.calls.oi + Math.floor((Math.random() - 0.5) * 10000)),
-          iv: Math.max(10, Math.min(25, option.calls.iv + (Math.random() - 0.5) * 2)),
-          volume: Math.max(10000, option.calls.volume + Math.floor((Math.random() - 0.5) * 5000)),
-        },
-        puts: {
-          ...option.puts,
-          oi: Math.max(50000, option.puts.oi + Math.floor((Math.random() - 0.5) * 10000)),
-          iv: Math.max(10, Math.min(25, option.puts.iv + (Math.random() - 0.5) * 2)),
-          volume: Math.max(10000, option.puts.volume + Math.floor((Math.random() - 0.5) * 5000)),
-        },
-      })),
-    )
+      setNiftyData((prev) => ({
+        currentPrice: newPrice,
+        todaysHigh: Math.max(prev.todaysHigh, newPrice),
+        todaysLow: Math.min(prev.todaysLow, newPrice),
+        openingPrice: prev.openingPrice,
+        previousClose: prev.previousClose,
+      }))
 
-    setPerformanceData({
-      estimatedPnL: 100000 + Math.random() * 100000,
-      signalProbability: 60 + Math.random() * 30,
-      signalDirection: Math.random() > 0.5 ? "bullish" : "bearish",
-    })
+      setOptionsData((prev) =>
+        prev.map((option) => ({
+          ...option,
+          calls: {
+            ...option.calls,
+            oi: Math.max(50000, option.calls.oi + Math.floor((Math.random() - 0.5) * 10000)),
+            iv: Math.max(10, Math.min(25, option.calls.iv + (Math.random() - 0.5) * 2)),
+            volume: Math.max(10000, option.calls.volume + Math.floor((Math.random() - 0.5) * 5000)),
+          },
+          puts: {
+            ...option.puts,
+            oi: Math.max(50000, option.puts.oi + Math.floor((Math.random() - 0.5) * 10000)),
+            iv: Math.max(10, Math.min(25, option.puts.iv + (Math.random() - 0.5) * 2)),
+            volume: Math.max(10000, option.puts.volume + Math.floor((Math.random() - 0.5) * 5000)),
+          },
+        })),
+      )
 
-    setIsRefreshing(false)
+      setPerformanceData({
+        estimatedPnL: 100000 + Math.random() * 100000,
+        signalProbability: 60 + Math.random() * 30,
+        signalDirection: Math.random() > 0.5 ? "bullish" : "bearish",
+      })
+
+      console.log("[v0] Data refresh completed successfully")
+    } catch (error) {
+      console.error("[v0] Error in refreshData:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
+
+  console.log("[v0] NiftyQuantumPlatform rendering")
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
@@ -190,6 +210,10 @@ export default function NiftyQuantumPlatform() {
         </div>
 
         <PersonalTradingAdvisor />
+
+        <DailyTopTrades />
+
+        <TradingChart symbol="NIFTY 50" />
 
         <Card className="bg-card border-border shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
