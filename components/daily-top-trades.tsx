@@ -27,45 +27,53 @@ export function DailyTopTrades() {
   useEffect(() => {
     console.log("[v0] DailyTopTrades useEffect - fetching top trades")
 
-    // Simulate fetching data from Google Sheets 'Top_Trades' tab
+    // Fetch real trading opportunities from generated signals
     const fetchTopTrades = async () => {
       console.log("[v0] fetchTopTrades called")
       setIsLoading(true)
 
       try {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        // Use OpenSheet API to directly access Google Sheets data
-        const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-        const data = await response.json()
+        // Get generated signals from real price data
+        const signalsResponse = await fetch('/api/generate-signals')
+        const signalsData = await signalsResponse.json()
         
         let highConfidenceTrades: TradeOpportunity[] = []
         
-        if (data && data.length > 0) {
-          // Check if we have "NO SIGNALS" message
-          const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
+        if (signalsData.success && signalsData.signals && signalsData.signals.length > 0) {
+          console.log("[v0] Processing real signals for top trades")
           
-          if (hasNoSignals) {
-            console.log("[v0] Google Sheets shows NO SIGNALS - no high confidence trades available")
-            highConfidenceTrades = []
-          } else {
-            // Convert OpenSheet data to TradeOpportunity format
-            const tradesFromSheet = data.map((row: any) => ({
-              stockName: row.Stock || row.Symbol || '',
-              symbol: row.Stock || row.Symbol || '',
-              action: (row.Action || 'BUY') as "BUY" | "SELL",
-              entryPrice: parseFloat(row.Price || row.EntryPrice || '0') || 0,
-              targetPrice: parseFloat(row.Target || row.TargetPrice || '0') || 0,
-              stopLoss: parseFloat(row.StopLoss || '0') || 0,
-              confidenceScore: parseFloat(row.Confidence || '0') || 0,
-              reason: row.Reason || row.Recommendation || 'Technical Analysis',
-              riskRewardRatio: row.RiskReward || '1:2.0',
-            })).filter((trade: TradeOpportunity) => 
-              trade.confidenceScore > 70 && trade.entryPrice > 0 && trade.stockName
-            )
+          // Convert real signals to TradeOpportunity format
+          highConfidenceTrades = signalsData.signals
+            .filter((signal: any) => signal.Confidence > 70 && signal.Action !== 'HOLD')
+            .map((signal: any) => {
+              const riskReward = signal.Target && signal.StopLoss ? 
+                `1:${Math.abs((signal.Target - signal.Price) / (signal.Price - signal.StopLoss)).toFixed(1)}` : 
+                '1:2.0'
+              
+              return {
+                stockName: signal.Stock,
+                symbol: signal.Stock,
+                action: signal.Action as "BUY" | "SELL",
+                entryPrice: signal.Price,
+                targetPrice: signal.Target || 0,
+                stopLoss: signal.StopLoss || 0,
+                confidenceScore: signal.Confidence,
+                reason: signal.Reason,
+                riskRewardRatio: riskReward,
+              }
+            })
+        } else {
+          // Fallback to Advisor_Output sheet
+          const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+          const data = await response.json()
+          
+          if (data && data.length > 0) {
+            const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
             
-            highConfidenceTrades = tradesFromSheet
+            if (hasNoSignals) {
+              console.log("[v0] Google Sheets shows NO SIGNALS - no high confidence trades available")
+              highConfidenceTrades = []
+            }
           }
         }
 

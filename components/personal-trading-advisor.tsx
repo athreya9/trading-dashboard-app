@@ -42,21 +42,54 @@ export function PersonalTradingAdvisor() {
   const fetchTradingData = async () => {
     setIsLoading(true)
     try {
-      // Use OpenSheet API to directly access Google Sheets data
+      // First try to get generated signals from real price data
+      const signalsResponse = await fetch('/api/generate-signals')
+      const signalsData = await signalsResponse.json()
+      
+      console.log('✅ Generated signals from real price data:', signalsData)
+
+      if (signalsData.success && signalsData.signals && signalsData.signals.length > 0) {
+        // Use real generated signals
+        const signals: TradingSignal[] = signalsData.signals.map((signal: any) => ({
+          Date: new Date(signal.Date).toLocaleDateString(),
+          Stock: signal.Stock,
+          Action: signal.Action as "BUY" | "SELL" | "HOLD",
+          Price: signal.Price,
+          Target: signal.Target,
+          StopLoss: signal.StopLoss,
+          Confidence: signal.Confidence,
+        }))
+
+        // Determine market mood based on real signals
+        const buySignals = signals.filter(s => s.Action === 'BUY').length
+        const sellSignals = signals.filter(s => s.Action === 'SELL').length
+        const marketMood = buySignals > sellSignals ? 'BULLISH' : sellSignals > buySignals ? 'BEARISH' : 'NEUTRAL'
+
+        setAdvisorData(prev => ({
+          ...prev,
+          signals: signals,
+          dataFreshness: 0,
+          marketMood: marketMood as "BULLISH" | "BEARISH" | "NEUTRAL",
+          systemStatus: "operational",
+          timeline: {
+            signalGenerated: new Date().toLocaleTimeString(),
+            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
+          },
+        }))
+        return
+      }
+
+      // Fallback to Advisor_Output sheet
       const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
       const data = await response.json()
 
       if (data && data.length > 0) {
-        console.log('✅ Raw data from Google Sheets:', data)
+        console.log('✅ Fallback to Advisor_Output data:', data)
 
-        // Handle the actual data structure - currently shows "NO SIGNALS"
         const signals: TradingSignal[] = []
-
-        // Check if we have "NO SIGNALS" message
         const noSignalsRow = data.find((row: any) => row['⚠️ NO SIGNALS'])
         
         if (noSignalsRow) {
-          // Show the actual "NO SIGNALS" message from the sheet
           const message = noSignalsRow['⚠️ NO SIGNALS'] || 'No signals available'
           signals.push({
             Date: new Date().toLocaleDateString(),
@@ -68,7 +101,6 @@ export function PersonalTradingAdvisor() {
             Confidence: 0,
           })
           
-          // Add the specific message as a second row
           signals.push({
             Date: new Date().toLocaleDateString(),
             Stock: message,
@@ -78,37 +110,17 @@ export function PersonalTradingAdvisor() {
             StopLoss: undefined,
             Confidence: 0,
           })
-        } else {
-          // Parse actual trading signals if they exist
-          data.forEach((row: any, index: number) => {
-            if (row.Stock || row.Symbol) {
-              signals.push({
-                Date: row.Date || new Date().toLocaleDateString(),
-                Stock: row.Stock || row.Symbol || `Signal ${index + 1}`,
-                Action: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
-                Price: parseFloat(row.Price || row.EntryPrice || '0') || 0,
-                Target: row.Target ? parseFloat(row.Target) : undefined,
-                StopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
-                Confidence: row.Confidence ? parseFloat(row.Confidence) : undefined,
-              })
-            }
-          })
         }
-
-        // Determine market mood based on signals
-        const buySignals = signals.filter(s => s.Action === 'BUY').length
-        const sellSignals = signals.filter(s => s.Action === 'SELL').length
-        const marketMood = buySignals > sellSignals ? 'BULLISH' : sellSignals > buySignals ? 'BEARISH' : 'NEUTRAL'
 
         setAdvisorData(prev => ({
           ...prev,
-          signals: signals.slice(0, 10), // Show latest 10 signals
+          signals: signals,
           dataFreshness: 0,
-          marketMood: marketMood as "BULLISH" | "BEARISH" | "NEUTRAL",
+          marketMood: 'NEUTRAL',
           systemStatus: "operational",
           timeline: {
             signalGenerated: new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(), // 30 minutes from now
+            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
           },
         }))
       } else {

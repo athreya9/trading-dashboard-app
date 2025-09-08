@@ -28,10 +28,46 @@ export function EnhancedSignalsDashboard() {
   const fetchEnhancedSignals = async () => {
     setIsLoading(true)
     try {
+      // First try to get generated signals from real price data
+      const signalsResponse = await fetch('/api/generate-signals')
+      const signalsData = await signalsResponse.json()
+      
+      console.log('📊 Generated signals from price data:', signalsData)
+
+      if (signalsData.success && signalsData.signals && signalsData.signals.length > 0) {
+        // Convert generated signals to enhanced signals format
+        const enhancedSignals: EnhancedSignal[] = signalsData.signals.map((signal: any) => {
+          const reasons = [
+            signal.Reason,
+            `RSI: ${signal.RSI}`,
+            `MACD: ${signal.MACD}`,
+            'Based on technical analysis of real market data'
+          ]
+
+          return {
+            instrument: signal.Stock,
+            signal: signal.Action as "BUY" | "SELL" | "HOLD",
+            confidence: signal.Confidence,
+            price: signal.Price,
+            target: signal.Target,
+            stopLoss: signal.StopLoss,
+            reasons: reasons,
+            news_insights: `Technical analysis based on real NIFTY data. ${signal.Reason}`,
+            timestamp: new Date(signal.Date).toLocaleString()
+          }
+        }).filter((signal: EnhancedSignal) => signal.confidence > 0)
+
+        setSignals(enhancedSignals)
+        setLastUpdate(new Date().toLocaleTimeString())
+        console.log('✅ Processed real signals:', enhancedSignals.length)
+        return
+      }
+
+      // Fallback to Advisor_Output sheet
       const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
       const data = await response.json()
 
-      console.log('📊 Raw Advisor_Output data:', data)
+      console.log('📊 Fallback to Advisor_Output data:', data)
 
       if (data && data.length > 0) {
         // Check if we have "NO SIGNALS" message
@@ -43,43 +79,13 @@ export function EnhancedSignalsDashboard() {
           setLastUpdate(new Date().toLocaleTimeString())
           return
         }
-
-        // Parse actual trading signals if they exist
-        const enhancedSignals: EnhancedSignal[] = data.map((row: any, index: number) => {
-          // Skip rows that are just status messages
-          if (row['⚠️ NO SIGNALS'] || !row.Stock) return null
-
-          const reasons = row.Reasons ? 
-            row.Reasons.split(',').map((r: string) => r.trim()) : 
-            [
-              'Technical analysis indicates strong momentum',
-              'Volume confirmation above average',
-              'Support/resistance levels aligned'
-            ]
-
-          return {
-            instrument: row.Stock || row.Symbol || `Signal ${index + 1}`,
-            signal: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
-            confidence: parseFloat(row.Confidence || '0') || Math.floor(Math.random() * 40) + 60,
-            price: parseFloat(row.Price || '0') || Math.floor(Math.random() * 1000) + 500,
-            target: row.Target ? parseFloat(row.Target) : undefined,
-            stopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
-            reasons: reasons,
-            news_insights: row.NewsInsights || row.MarketContext || 
-              'Market sentiment remains positive with institutional buying interest observed.',
-            timestamp: row.Date || new Date().toLocaleString()
-          }
-        }).filter((signal: EnhancedSignal | null): signal is EnhancedSignal => 
-          signal !== null && signal.price > 0
-        )
-
-        setSignals(enhancedSignals)
-        setLastUpdate(new Date().toLocaleTimeString())
-        console.log('✅ Processed signals:', enhancedSignals.length)
-      } else {
-        console.log('📭 No data received from Google Sheets')
-        setSignals([])
       }
+      
+      // If no signals from either source
+      console.log('📭 No signals available from any source')
+      setSignals([])
+      setLastUpdate(new Date().toLocaleTimeString())
+      
     } catch (error) {
       console.error('❌ Error fetching enhanced signals:', error)
       setSignals([])

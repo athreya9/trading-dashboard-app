@@ -18,28 +18,31 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
 
   const fetchRealChartData = async () => {
     try {
-      // First try to fetch from Price_Data sheet for better chart data
-      const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price_Data')
+      // Fetch real price data from Google Sheets
+      const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price%20Data')
       const priceData = await priceResponse.json()
       
+      console.log("[v0] Fetched price data length:", priceData?.length)
+      
       if (priceData && priceData.length > 0 && !priceData.error) {
-        // Convert Price_Data to chart format
+        // Convert real Price_Data to chart format
         const chartData = priceData.map((row: any) => ({
-          date: row.Date || row.Timestamp || new Date().toLocaleDateString(),
-          open: parseFloat(row.Open || row.OpenPrice || '0') || 0,
-          high: parseFloat(row.High || '0') || 0,
-          low: parseFloat(row.Low || '0') || 0,
-          close: parseFloat(row.Close || row.CurrentPrice || row.Price || '0') || 0,
-          volume: parseFloat(row.Volume || '0') || 0,
+          date: row.timestamp || new Date().toLocaleDateString(),
+          open: parseFloat(row.open || '0') || 0,
+          high: parseFloat(row.high || '0') || 0,
+          low: parseFloat(row.low || '0') || 0,
+          close: parseFloat(row.close || '0') || 0,
+          volume: parseFloat(row.volume || '0') || 0,
         })).filter((item: any) => item.close > 0)
         
+        console.log("[v0] Processed real chart data points:", chartData.length)
         return chartData.slice(-50) // Get last 50 data points
       } else {
-        console.log("[v0] Price_Data sheet not available, generating sample chart data")
+        console.log("[v0] No real price data available, generating sample chart data")
         
         // Generate realistic sample chart data for NIFTY 50
         const sampleData = []
-        const basePrice = 21850
+        const basePrice = 24750 // Current NIFTY level from real data
         let currentPrice = basePrice
         
         for (let i = 0; i < 30; i++) {
@@ -61,6 +64,7 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
           currentPrice = close
         }
         
+        console.log("[v0] Generated sample chart data points:", sampleData.length)
         return sampleData
       }
     } catch (error) {
