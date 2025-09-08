@@ -116,10 +116,14 @@ export function TradingBotControl() {
   }
 
   const isMarketHours = () => {
+    // Get current time in IST (UTC + 5:30)
     const now = new Date()
-    const day = now.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const hours = now.getHours()
-    const minutes = now.getMinutes()
+    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC + 5:30
+    const istTime = new Date(now.getTime() + istOffset)
+    
+    const day = istTime.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const hours = istTime.getHours()
+    const minutes = istTime.getMinutes()
     const currentTime = hours * 60 + minutes
     
     // Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
