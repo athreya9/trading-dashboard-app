@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBotState, updateBotState, isMarketHours } from '@/lib/bot-state';
+import { formatISTTimeOnly } from '@/lib/ist-utils';
 
 export async function GET() {
   try {
@@ -9,11 +10,11 @@ export async function GET() {
     // Update market hours status
     const marketHours = isMarketHours();
     
-    // Auto-stop bot if outside market hours
+    // Auto-stop bot if outside Indian market hours
     if (!marketHours && currentState.status === 'running') {
       await updateBotState({
         status: 'stopped',
-        lastStopped: new Date().toLocaleTimeString(),
+        lastStopped: formatISTTimeOnly(),
         marketHours: false
       });
     } else {

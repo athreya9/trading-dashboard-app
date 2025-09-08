@@ -47,7 +47,7 @@ export function TradingBotControl() {
         setBotStatus(prev => ({ 
           ...prev, 
           status: 'running',
-          lastStarted: new Date().toLocaleTimeString()
+          lastStarted: getCurrentISTTime()
         }))
       }
     } catch (error) {
@@ -68,7 +68,7 @@ export function TradingBotControl() {
         setBotStatus(prev => ({ 
           ...prev, 
           status: 'stopped',
-          lastStopped: new Date().toLocaleTimeString()
+          lastStopped: getCurrentISTTime()
         }))
       }
     } catch (error) {
@@ -126,11 +126,24 @@ export function TradingBotControl() {
     const minutes = istTime.getMinutes()
     const currentTime = hours * 60 + minutes
     
-    // Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
-    const marketOpen = 9 * 60 + 15 // 9:15 AM
-    const marketClose = 15 * 60 + 30 // 3:30 PM
+    // Indian Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
+    const marketOpen = 9 * 60 + 15 // 9:15 AM IST
+    const marketClose = 15 * 60 + 30 // 3:30 PM IST
     
     return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose
+  }
+
+  const getCurrentISTTime = () => {
+    const now = new Date()
+    const istOffset = 5.5 * 60 * 60 * 1000
+    const istTime = new Date(now.getTime() + istOffset)
+    return istTime.toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    })
   }
 
   return (
@@ -226,10 +239,13 @@ export function TradingBotControl() {
           <div className="bg-yellow-900/30 border border-yellow-600 rounded-lg p-3">
             <div className="flex items-center gap-2 text-yellow-400">
               <Clock className="h-4 w-4" />
-              <span className="font-medium">Market Closed</span>
+              <span className="font-medium">Indian Market Closed</span>
             </div>
             <p className="text-yellow-200 text-sm mt-1">
-              Trading bot is inactive outside market hours (Mon-Fri 9:15 AM - 3:30 PM IST)
+              Trading bot is inactive outside Indian market hours (Mon-Fri 9:15 AM - 3:30 PM IST)
+            </p>
+            <p className="text-yellow-100 text-xs mt-1">
+              Current IST Time: {getCurrentISTTime()}
             </p>
           </div>
         )}

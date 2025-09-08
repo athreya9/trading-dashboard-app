@@ -1,5 +1,6 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import { getISTTime, formatISTTimeOnly, isISTMarketHours } from './ist-utils';
 
 // Shared bot state across all API endpoints
 interface BotState {
@@ -141,25 +142,5 @@ export async function updateBotState(updates: Partial<BotState>): Promise<BotSta
 }
 
 export function isMarketHours(): boolean {
-  // TEMPORARY: Always return true for testing
-  // TODO: Re-enable market hours check after testing
-  return true;
-  
-  // Get current time in IST (UTC + 5:30)
-  const now = new Date()
-  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC + 5:30
-  const istTime = new Date(now.getTime() + istOffset)
-  
-  const day = istTime.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const hours = istTime.getHours()
-  const minutes = istTime.getMinutes()
-  const currentTime = hours * 60 + minutes
-  
-  // Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
-  const marketOpen = 9 * 60 + 15 // 9:15 AM
-  const marketClose = 15 * 60 + 30 // 3:30 PM
-  
-  console.log(`🕐 Market Hours Check: IST Time: ${istTime.toLocaleString()}, Day: ${day}, Current: ${currentTime}, Open: ${marketOpen}, Close: ${marketClose}`)
-  
-  return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose
+  return isISTMarketHours()
 }

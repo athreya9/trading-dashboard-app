@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getISTTimestamp } from '@/lib/ist-utils';
 
 export async function GET() {
   try {
@@ -27,8 +28,9 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: data,
-      timestamp: new Date().toISOString(),
-      source: 'Dynamic Market Data'
+      timestamp: getISTTimestamp(),
+      source: 'Dynamic Market Data (IST)',
+      timezone: 'Asia/Kolkata'
     });
     
   } catch (error) {

@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
+import { getISTTime, formatISTTime, isISTMarketHours } from '@/lib/ist-utils';
 
 export async function GET() {
   const now = new Date();
   const utcTime = now.toUTCString();
-  
-  // IST calculation
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istTime = new Date(now.getTime() + istOffset);
-  const istTimeString = istTime.toLocaleString();
+  const istTime = getISTTime();
+  const istTimeString = formatISTTime();
   
   // UTC values
   const utcDay = now.getDay();
@@ -21,13 +19,15 @@ export async function GET() {
   const istMinutes = istTime.getMinutes();
   const istCurrentTime = istHours * 60 + istMinutes;
   
-  const marketOpen = 9 * 60 + 15; // 9:15 AM
-  const marketClose = 15 * 60 + 30; // 3:30 PM
+  const marketOpen = 9 * 60 + 15; // 9:15 AM IST
+  const marketClose = 15 * 60 + 30; // 3:30 PM IST
+  const isMarketOpen = isISTMarketHours();
   
   return NextResponse.json({
     serverTime: {
       utc: utcTime,
       ist: istTimeString,
+      istFormatted: istTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
       utcDay: utcDay,
       utcHours: utcHours,
       utcMinutes: utcMinutes,
@@ -37,12 +37,16 @@ export async function GET() {
       istMinutes: istMinutes,
       istCurrentTimeMinutes: istCurrentTime
     },
-    marketHours: {
+    indianMarketHours: {
       open: marketOpen,
       close: marketClose,
+      openTime: '9:15 AM IST',
+      closeTime: '3:30 PM IST',
       isWeekday: istDay >= 1 && istDay <= 5,
       isWithinHours: istCurrentTime >= marketOpen && istCurrentTime <= marketClose,
-      isMarketOpen: istDay >= 1 && istDay <= 5 && istCurrentTime >= marketOpen && istCurrentTime <= marketClose
+      isMarketOpen: isMarketOpen,
+      timezone: 'Asia/Kolkata (IST)',
+      currentStatus: isMarketOpen ? 'MARKET OPEN' : 'MARKET CLOSED'
     }
   });
 }

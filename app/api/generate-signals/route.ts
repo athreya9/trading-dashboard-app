@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { formatISTTime, getISTTimestamp } from '@/lib/ist-utils';
 
 interface PriceData {
   timestamp: string;
@@ -127,7 +128,7 @@ export async function GET() {
         const stopLoss = action === 'BUY' ? price - atr : price + atr;
         
         signals.push({
-          Date: data.timestamp,
+          Date: formatISTTime(data.timestamp),
           Stock: 'NIFTY 50',
           Action: action,
           Price: Math.round(price * 100) / 100,
@@ -144,7 +145,7 @@ export async function GET() {
     // If no signals generated, create a consolidation message
     if (signals.length === 0) {
       signals.push({
-        Date: new Date().toISOString(),
+        Date: formatISTTime(),
         Stock: '⚠️ MARKET STATUS',
         Action: 'HOLD',
         Price: parseFloat(recentData[recentData.length - 1]?.close || '0'),
@@ -159,7 +160,8 @@ export async function GET() {
       success: true,
       signals: signals.slice(-5), // Return latest 5 signals
       dataPoints: recentData.length,
-      lastUpdate: new Date().toISOString()
+      lastUpdate: getISTTimestamp(),
+      timezone: 'Asia/Kolkata (IST)'
     });
     
   } catch (error) {

@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getBotState, updateBotState, isMarketHours } from '@/lib/bot-state';
+import { formatISTTimeOnly } from '@/lib/ist-utils';
 
 export async function POST() {
   try {
     // Check if market is open
     if (!isMarketHours()) {
-      console.log('❌ Cannot start bot outside market hours');
+      console.log('❌ Cannot start bot outside Indian market hours');
       return NextResponse.json({
         success: false,
-        error: 'Cannot start bot outside market hours',
-        message: 'Trading bot can only run Monday-Friday, 9:15 AM - 3:30 PM IST'
+        error: 'Cannot start bot outside Indian market hours',
+        message: 'Trading bot can only run Monday-Friday, 9:15 AM - 3:30 PM IST (Indian Standard Time)'
       }, { status: 400 });
     }
 
@@ -29,7 +30,7 @@ export async function POST() {
     // Start the bot - update state in Google Sheets
     const newState = await updateBotState({
       status: 'running',
-      lastStarted: new Date().toLocaleTimeString(),
+      lastStarted: formatISTTimeOnly(),
       marketHours: true
     });
 

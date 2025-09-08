@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBotState, updateBotState } from '@/lib/bot-state';
+import { formatISTTimeOnly } from '@/lib/ist-utils';
 
 export async function POST() {
   try {
@@ -19,7 +20,7 @@ export async function POST() {
     // Stop the bot - update state in Google Sheets
     const newState = await updateBotState({
       status: 'stopped',
-      lastStopped: new Date().toLocaleTimeString()
+      lastStopped: formatISTTimeOnly()
     });
 
     // In a real implementation, you would:
