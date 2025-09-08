@@ -3,25 +3,36 @@ import { getBotState, updateBotState } from '@/lib/bot-state';
 import { formatISTTimeOnly } from '@/lib/ist-utils';
 
 export async function POST() {
+  console.log('🛑 Stop-bot API called at:', new Date().toISOString());
+  
   try {
     // Get current bot state from Google Sheets
+    console.log('📊 Getting current bot state...');
     const currentState = await getBotState();
+    console.log('Current state:', currentState);
 
-    // Check if bot is already stopped
+    // Allow stopping even if already stopped (for UI consistency)
     if (currentState.status === 'stopped') {
-      console.log('❌ Bot is already stopped');
+      console.log('⚠️ Bot is already stopped, but returning success for UI');
       return NextResponse.json({
-        success: false,
-        error: 'Bot is already stopped',
+        success: true,
+        message: 'Bot is already stopped',
         status: currentState
-      }, { status: 400 });
+      });
     }
 
     // Stop the bot - update state in Google Sheets
+    console.log('🔄 Updating bot state to stopped...');
+    const stopTime = formatISTTimeOnly();
+    console.log('Stop time (IST):', stopTime);
+    
     const newState = await updateBotState({
       status: 'stopped',
-      lastStopped: formatISTTimeOnly()
+      lastStopped: stopTime,
+      marketHours: false
     });
+
+    console.log('✅ Bot state updated:', newState);
 
     // In a real implementation, you would:
     // 1. Gracefully shut down your trading bot process
@@ -29,7 +40,7 @@ export async function POST() {
     // 3. Save current state and positions
     // 4. Send notifications about bot shutdown
     
-    console.log('✅ Trading bot stopped at:', newState.lastStopped);
+    console.log('✅ Trading bot stopped successfully at:', newState.lastStopped);
 
     return NextResponse.json({
       success: true,
@@ -39,7 +50,13 @@ export async function POST() {
 
   } catch (error) {
     console.error('❌ Error stopping bot:', error);
+    console.error('Error details:', {
+      message: (error as Error).message,
+      stack: (error as Error).stack
+    });
+    
     try {
+      console.log('🔄 Attempting to set error state...');
       await updateBotState({ status: 'error' });
     } catch (updateError) {
       console.error('❌ Failed to update error state:', updateError);

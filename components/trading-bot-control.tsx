@@ -40,18 +40,28 @@ export function TradingBotControl() {
   const startBot = async () => {
     setIsLoading(true)
     try {
+      console.log('▶️ Attempting to start bot...')
       const response = await fetch('/api/start-bot', { method: 'POST' })
       const result = await response.json()
       
+      console.log('Start bot response:', result)
+      
       if (result.success) {
+        console.log('✅ Bot started successfully')
         setBotStatus(prev => ({ 
           ...prev, 
           status: 'running',
           lastStarted: getCurrentISTTime()
         }))
+        // Refresh status after starting
+        setTimeout(checkBotStatus, 1000)
+      } else {
+        console.error('❌ Failed to start bot:', result.error)
+        alert(`Failed to start bot: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error starting bot:', error)
+      console.error('❌ Error starting bot:', error)
+      alert(`Error starting bot: ${(error as Error).message}`)
       setBotStatus(prev => ({ ...prev, status: 'error' }))
     } finally {
       setIsLoading(false)
@@ -61,18 +71,28 @@ export function TradingBotControl() {
   const stopBot = async () => {
     setIsLoading(true)
     try {
+      console.log('🛑 Attempting to stop bot...')
       const response = await fetch('/api/stop-bot', { method: 'POST' })
       const result = await response.json()
       
+      console.log('Stop bot response:', result)
+      
       if (result.success) {
+        console.log('✅ Bot stopped successfully')
         setBotStatus(prev => ({ 
           ...prev, 
           status: 'stopped',
           lastStopped: getCurrentISTTime()
         }))
+        // Refresh status after stopping
+        setTimeout(checkBotStatus, 1000)
+      } else {
+        console.error('❌ Failed to stop bot:', result.error)
+        alert(`Failed to stop bot: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error stopping bot:', error)
+      console.error('❌ Error stopping bot:', error)
+      alert(`Error stopping bot: ${(error as Error).message}`)
       setBotStatus(prev => ({ ...prev, status: 'error' }))
     } finally {
       setIsLoading(false)

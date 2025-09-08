@@ -22,7 +22,7 @@ export function useRealData() {
         setAdvisorData(advisorResult)
       }
 
-      // Fetch real market data from Price_Data
+      // Fetch real market data from Price_Data (OpenSheet API format)
       try {
         const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price_Data')
         const priceResult = await priceResponse.json()
@@ -98,8 +98,8 @@ export function useMarketData() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch real market data
-    fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price_Data')
+    // Fetch real market data from Price Data (with space)
+    fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price%20Data')
       .then(res => res.json())
       .then(data => {
         setMarketData(data || [])

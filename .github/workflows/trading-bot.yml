@@ -1,0 +1,39 @@
+name: Trading Bot Data Processing
+
+on:
+  schedule:
+    # Run every 5 minutes during market hours (9:15 AM to 3:30 PM IST)
+    # IST is UTC+5:30, so 9:15 AM IST = 3:45 AM UTC, 3:30 PM IST = 10:00 AM UTC
+    - cron: '45 3-10 * * 1-5'  # Monday to Friday, 3:45 AM to 10:00 AM UTC (9:15 AM to 3:30 PM IST)
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  process-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    
+    - name: Run data processing
+      env:
+        GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+      run: |
+        cd backend
+        python process_data.py
+    
+    - name: Log completion
+      run: |
+        echo "Data processing completed at $(date)"
