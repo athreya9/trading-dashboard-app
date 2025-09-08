@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { formatISTTime, getISTTimestamp } from '@/lib/ist-utils';
+import { formatGoogleSheetsTimestamp, getISTTimestamp } from '@/lib/ist-utils';
 
 interface PriceData {
   timestamp: string;
@@ -128,7 +128,7 @@ export async function GET() {
         const stopLoss = action === 'BUY' ? price - atr : price + atr;
         
         signals.push({
-          Date: formatISTTime(data.timestamp),
+          Date: formatGoogleSheetsTimestamp(data.timestamp),
           Stock: 'NIFTY 50',
           Action: action,
           Price: Math.round(price * 100) / 100,
@@ -145,7 +145,7 @@ export async function GET() {
     // If no signals generated, create a consolidation message
     if (signals.length === 0) {
       signals.push({
-        Date: formatISTTime(),
+        Date: formatGoogleSheetsTimestamp(recentData[recentData.length - 1]?.timestamp || new Date().toISOString()),
         Stock: '⚠️ MARKET STATUS',
         Action: 'HOLD',
         Price: parseFloat(recentData[recentData.length - 1]?.close || '0'),

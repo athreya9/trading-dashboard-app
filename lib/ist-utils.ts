@@ -11,17 +11,15 @@ export function getISTTime(): Date {
 
 /**
  * Format date/time in IST
+ * Assumes input timestamps from Google Sheets are already in IST
  */
 export function formatISTTime(date?: Date | string): string {
-  const targetDate = date ? new Date(date) : new Date()
-  const istTime = getISTTime()
-  
-  // If a specific date is provided, adjust it to IST
   if (date) {
+    // Parse the date assuming it's already in IST format from Google Sheets
     const inputDate = new Date(date)
-    const istOffset = 5.5 * 60 * 60 * 1000
-    const adjustedDate = new Date(inputDate.getTime() + istOffset)
-    return adjustedDate.toLocaleString('en-IN', { 
+    
+    // Format directly without adding offset (data is already in IST)
+    return inputDate.toLocaleString('en-IN', { 
       timeZone: 'Asia/Kolkata',
       year: 'numeric',
       month: '2-digit',
@@ -33,6 +31,8 @@ export function formatISTTime(date?: Date | string): string {
     })
   }
   
+  // For current time, get IST time
+  const istTime = getISTTime()
   return istTime.toLocaleString('en-IN', { 
     timeZone: 'Asia/Kolkata',
     year: 'numeric',
@@ -107,6 +107,25 @@ export function convertUTCToIST(utcTimestamp: string): string {
   const istDate = new Date(utcDate.getTime() + istOffset)
   
   return istDate.toLocaleString('en-IN', { 
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  })
+}
+
+/**
+ * Format Google Sheets timestamp (already in IST) for display
+ */
+export function formatGoogleSheetsTimestamp(timestamp: string): string {
+  // Google Sheets timestamps are already in IST format like "2025-09-05 15:15:00"
+  const date = new Date(timestamp)
+  
+  return date.toLocaleString('en-IN', { 
     timeZone: 'Asia/Kolkata',
     year: 'numeric',
     month: '2-digit',
