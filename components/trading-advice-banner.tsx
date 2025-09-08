@@ -20,8 +20,22 @@ export function TradingAdviceBanner() {
         
         if (data && data.length > 0) {
           const latest = data[0] // Get the first/latest recommendation
-          setTradingAdvice(latest.Recommendation || latest.recommendation || 'No advice available')
-          setLatestSignal(latest)
+          
+          // Handle the actual data structure from your sheet
+          if (latest['⚠️ NO SIGNALS']) {
+            setTradingAdvice(latest['⚠️ NO SIGNALS'] || 'Market may be in consolidation')
+            setLatestSignal({
+              Action: 'HOLD',
+              Stock: 'MARKET',
+              Price: '0',
+              Confidence: '0'
+            })
+          } else {
+            setTradingAdvice(latest.Recommendation || latest.recommendation || 'No advice available')
+            setLatestSignal(latest)
+          }
+          
+          console.log('✅ Trading advice updated from Google Sheets:', latest)
         }
       } catch (error) {
         console.error('Error fetching advice:', error)

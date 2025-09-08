@@ -1,46 +1,35 @@
 import { NextResponse } from 'next/server';
-
-// In a real implementation, this would check the actual bot status
-// For now, we'll simulate the status
-let botState = {
-  status: 'stopped' as 'running' | 'stopped' | 'error' | 'loading',
-  lastStarted: null as string | null,
-  lastStopped: null as string | null,
-  uptime: null as string | null,
-  tradesExecuted: 0,
-  marketHours: false
-};
-
-const isMarketHours = () => {
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const currentTime = hours * 60 + minutes;
-  
-  // Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
-  const marketOpen = 9 * 60 + 15; // 9:15 AM
-  const marketClose = 15 * 60 + 30; // 3:30 PM
-  
-  return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose;
-};
+import { getBotState, updateBotState, isMarketHours } from '@/lib/bot-state';
 
 export async function GET() {
   try {
+    // Get current bot state
+    const currentState = getBotState();
+    
     // Update market hours status
-    botState.marketHours = isMarketHours();
+    const marketHours = isMarketHours();
     
     // Auto-stop bot if outside market hours
-    if (!botState.marketHours && botState.status === 'running') {
-      botState.status = 'stopped';
-      botState.lastStopped = new Date().toLocaleTimeString();
+    if (!marketHours && currentState.status === 'running') {
+      updateBotState({
+        status: 'stopped',
+        lastStopped: new Date().toLocaleTimeString(),
+        marketHours: false
+      });
+    } else {
+      updateBotState({ marketHours });
     }
+
+    const updatedState = getBotState();
+    
+    console.log('✅ Bot status checked:', updatedState);
 
     return NextResponse.json({
       success: true,
-      status: botState
+      status: updatedState
     });
   } catch (error) {
+    console.error('❌ Error getting bot status:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to get bot status',

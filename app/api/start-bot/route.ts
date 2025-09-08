@@ -1,32 +1,11 @@
 import { NextResponse } from 'next/server';
-
-// Shared bot state (in production, this would be in a database or external service)
-let botState = {
-  status: 'stopped' as 'running' | 'stopped' | 'error' | 'loading',
-  lastStarted: null as string | null,
-  lastStopped: null as string | null,
-  uptime: null as string | null,
-  tradesExecuted: 0,
-  marketHours: false
-};
-
-const isMarketHours = () => {
-  const now = new Date();
-  const day = now.getDay();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const currentTime = hours * 60 + minutes;
-  
-  const marketOpen = 9 * 60 + 15; // 9:15 AM
-  const marketClose = 15 * 60 + 30; // 3:30 PM
-  
-  return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose;
-};
+import { getBotState, updateBotState, isMarketHours } from '@/lib/bot-state';
 
 export async function POST() {
   try {
     // Check if market is open
     if (!isMarketHours()) {
+      console.log('❌ Cannot start bot outside market hours');
       return NextResponse.json({
         success: false,
         error: 'Cannot start bot outside market hours',
@@ -34,35 +13,42 @@ export async function POST() {
       }, { status: 400 });
     }
 
+    // Get current bot state
+    const currentState = getBotState();
+
     // Check if bot is already running
-    if (botState.status === 'running') {
+    if (currentState.status === 'running') {
+      console.log('❌ Bot is already running');
       return NextResponse.json({
         success: false,
         error: 'Bot is already running',
-        status: botState
+        status: currentState
       }, { status: 400 });
     }
 
     // Start the bot
-    botState.status = 'running';
-    botState.lastStarted = new Date().toLocaleTimeString();
-    botState.marketHours = true;
+    const newState = updateBotState({
+      status: 'running',
+      lastStarted: new Date().toLocaleTimeString(),
+      marketHours: true
+    });
 
     // In a real implementation, you would:
     // 1. Start your actual trading bot process
     // 2. Initialize connections to trading APIs
     // 3. Begin monitoring and executing trades
     
-    console.log('🤖 Trading bot started at:', botState.lastStarted);
+    console.log('✅ Trading bot started at:', newState.lastStarted);
 
     return NextResponse.json({
       success: true,
       message: 'Trading bot started successfully',
-      status: botState
+      status: newState
     });
 
   } catch (error) {
-    botState.status = 'error';
+    console.error('❌ Error starting bot:', error);
+    updateBotState({ status: 'error' });
     
     return NextResponse.json({
       success: false,
