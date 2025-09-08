@@ -9,6 +9,8 @@ import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
 import { TradingChart } from "@/components/trading-chart"
 import { DailyTopTrades } from "@/components/daily-top-trades"
 import { TradingBotControl } from "@/components/trading-bot-control"
+import { TradingAdviceBanner } from "@/components/trading-advice-banner"
+import { MarketStatus } from "@/components/market-status"
 
 interface NiftyData {
   currentPrice: number
@@ -102,9 +104,10 @@ export default function NiftyQuantumPlatform() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
                 Trading Dashboard
               </h1>
-              <p className="text-sm md:text-base text-muted-foreground font-medium">
+              <p className="text-sm md:text-base text-muted-foreground font-medium mb-2">
                 Algorithmic Trading Intelligence Platform
               </p>
+              <MarketStatus />
             </div>
           </div>
 
@@ -145,6 +148,8 @@ export default function NiftyQuantumPlatform() {
             </Card>
           </div>
         </div>
+
+        <TradingAdviceBanner />
 
         <TradingBotControl />
 
