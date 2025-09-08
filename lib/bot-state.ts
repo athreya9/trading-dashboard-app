@@ -141,6 +141,10 @@ export async function updateBotState(updates: Partial<BotState>): Promise<BotSta
 }
 
 export function isMarketHours(): boolean {
+  // TEMPORARY: Always return true for testing
+  // TODO: Re-enable market hours check after testing
+  return true;
+  
   // Get current time in IST (UTC + 5:30)
   const now = new Date()
   const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC + 5:30
