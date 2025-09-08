@@ -123,16 +123,16 @@ export function convertUTCToIST(utcTimestamp: string): string {
  */
 export function formatGoogleSheetsTimestamp(timestamp: string): string {
   // Google Sheets timestamps are already in IST format like "2025-09-05 15:15:00"
-  const date = new Date(timestamp)
+  // Parse the timestamp components directly to avoid timezone conversion
+  const [datePart, timePart] = timestamp.split(' ')
+  const [year, month, day] = datePart.split('-')
+  const [hour, minute, second] = timePart.split(':')
   
-  return date.toLocaleString('en-IN', { 
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  })
+  // Convert to 12-hour format
+  const hour24 = parseInt(hour)
+  const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24
+  const ampm = hour24 >= 12 ? 'pm' : 'am'
+  
+  // Format as DD/MM/YYYY, HH:MM:SS AM/PM
+  return `${day}/${month}/${year}, ${hour12.toString().padStart(2, '0')}:${minute}:${second} ${ampm}`
 }
