@@ -11,6 +11,7 @@ import { DailyTopTrades } from "@/components/daily-top-trades"
 import { TradingBotControl } from "@/components/trading-bot-control"
 import { TradingAdviceBanner } from "@/components/trading-advice-banner"
 import { MarketStatus } from "@/components/market-status"
+import { ModeSwitch } from "@/components/mode-switch"
 
 interface NiftyData {
   currentPrice: number
@@ -150,6 +151,8 @@ export default function NiftyQuantumPlatform() {
         </div>
 
         <TradingAdviceBanner />
+
+        <ModeSwitch />
 
         <TradingBotControl />
 
