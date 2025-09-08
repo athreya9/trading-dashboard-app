@@ -60,21 +60,37 @@ export default function NiftyQuantumPlatform() {
     setIsRefreshing(true)
 
     try {
-      // Use OpenSheet API to directly access Google Sheets data
-      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const data = await response.json()
+      // Fetch real market data from Price_Data sheet
+      const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price_Data')
+      const priceData = await priceResponse.json()
       
-      if (data && data.length > 0) {
-        // Get the latest row of data
-        const latestRow = data[data.length - 1]
+      if (priceData && priceData.length > 0) {
+        // Get the latest market data
+        const latestPriceRow = priceData[priceData.length - 1]
         
         setNiftyData({
-          currentPrice: parseFloat(latestRow.Price || latestRow.CurrentPrice || '0') || 0,
-          todaysHigh: parseFloat(latestRow.High || latestRow.TodaysHigh || '0') || 0,
-          todaysLow: parseFloat(latestRow.Low || latestRow.TodaysLow || '0') || 0,
-          openingPrice: parseFloat(latestRow.Open || latestRow.OpeningPrice || '0') || 0,
-          previousClose: parseFloat(latestRow.PreviousClose || latestRow.PrevClose || '0') || 0,
+          currentPrice: parseFloat(latestPriceRow.CurrentPrice || latestPriceRow.Price || latestPriceRow.Close || '0') || 0,
+          todaysHigh: parseFloat(latestPriceRow.High || latestPriceRow.TodaysHigh || '0') || 0,
+          todaysLow: parseFloat(latestPriceRow.Low || latestPriceRow.TodaysLow || '0') || 0,
+          openingPrice: parseFloat(latestPriceRow.Open || latestPriceRow.OpeningPrice || '0') || 0,
+          previousClose: parseFloat(latestPriceRow.PreviousClose || latestPriceRow.PrevClose || '0') || 0,
         })
+      } else {
+        // Fallback to Advisor_Output if Price_Data is not available
+        const advisorResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+        const advisorData = await advisorResponse.json()
+        
+        if (advisorData && advisorData.length > 0) {
+          const latestRow = advisorData[advisorData.length - 1]
+          
+          setNiftyData({
+            currentPrice: parseFloat(latestRow.Price || latestRow.CurrentPrice || '0') || 0,
+            todaysHigh: parseFloat(latestRow.High || latestRow.TodaysHigh || '0') || 0,
+            todaysLow: parseFloat(latestRow.Low || latestRow.TodaysLow || '0') || 0,
+            openingPrice: parseFloat(latestRow.Open || latestRow.OpeningPrice || '0') || 0,
+            previousClose: parseFloat(latestRow.PreviousClose || latestRow.PrevClose || '0') || 0,
+          })
+        }
       }
 
       console.log("[v0] Data refresh completed successfully")

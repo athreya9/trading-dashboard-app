@@ -14,6 +14,7 @@ export function TradingAdviceBanner() {
     const fetchAdvice = async () => {
       setIsLoading(true)
       try {
+        // Fetch real trading advice from Advisor_Output
         const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
         const data = await response.json()
         
@@ -31,7 +32,7 @@ export function TradingAdviceBanner() {
     }
 
     fetchAdvice()
-    // Refresh every 30 seconds
+    // Refresh every 30 seconds - REAL API calls only
     const interval = setInterval(fetchAdvice, 30000)
     return () => clearInterval(interval)
   }, [])

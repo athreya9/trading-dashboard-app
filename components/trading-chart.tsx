@@ -18,22 +18,39 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
 
   const fetchRealChartData = async () => {
     try {
-      // Use OpenSheet API to directly access Google Sheets data
-      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const data = await response.json()
+      // First try to fetch from Price_Data sheet for better chart data
+      const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price_Data')
+      const priceData = await priceResponse.json()
       
-      if (data && data.length > 0) {
-        // Convert OpenSheet data to chart format
-        const chartData = data.map((row: any) => ({
-          date: row.Date || new Date().toLocaleDateString(),
-          open: parseFloat(row.Open || row.OpenPrice || row.Price || '0') || 0,
-          high: parseFloat(row.High || row.Price || '0') || 0,
-          low: parseFloat(row.Low || row.Price || '0') || 0,
-          close: parseFloat(row.Price || row.Close || '0') || 0,
+      if (priceData && priceData.length > 0) {
+        // Convert Price_Data to chart format
+        const chartData = priceData.map((row: any) => ({
+          date: row.Date || row.Timestamp || new Date().toLocaleDateString(),
+          open: parseFloat(row.Open || row.OpenPrice || '0') || 0,
+          high: parseFloat(row.High || '0') || 0,
+          low: parseFloat(row.Low || '0') || 0,
+          close: parseFloat(row.Close || row.CurrentPrice || row.Price || '0') || 0,
           volume: parseFloat(row.Volume || '0') || 0,
         })).filter((item: any) => item.close > 0)
         
         return chartData.slice(-50) // Get last 50 data points
+      } else {
+        // Fallback to Advisor_Output if Price_Data is not available
+        const advisorResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+        const advisorData = await advisorResponse.json()
+        
+        if (advisorData && advisorData.length > 0) {
+          const chartData = advisorData.map((row: any) => ({
+            date: row.Date || new Date().toLocaleDateString(),
+            open: parseFloat(row.Open || row.OpenPrice || row.Price || '0') || 0,
+            high: parseFloat(row.High || row.Price || '0') || 0,
+            low: parseFloat(row.Low || row.Price || '0') || 0,
+            close: parseFloat(row.Price || row.Close || '0') || 0,
+            volume: parseFloat(row.Volume || '0') || 0,
+          })).filter((item: any) => item.close > 0)
+          
+          return chartData.slice(-50)
+        }
       }
     } catch (error) {
       console.error("[v0] Error fetching chart data:", error)

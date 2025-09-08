@@ -12,11 +12,12 @@ export function MarketStatus() {
   useEffect(() => {
     const fetchMarketStatus = async () => {
       try {
+        // REAL API call - no hardcoded data
         const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
         const data = await response.json()
         
         if (data && data.length > 0) {
-          // Calculate market mood based on signals
+          // Calculate market mood based on REAL signals from Google Sheets
           const buySignals = data.filter((row: any) => row.Action?.toUpperCase() === 'BUY').length
           const sellSignals = data.filter((row: any) => row.Action?.toUpperCase() === 'SELL').length
           
@@ -34,7 +35,7 @@ export function MarketStatus() {
     }
 
     fetchMarketStatus()
-    const interval = setInterval(fetchMarketStatus, 60000) // Update every minute
+    const interval = setInterval(fetchMarketStatus, 60000) // Update every minute with REAL data
     return () => clearInterval(interval)
   }, [])
 
