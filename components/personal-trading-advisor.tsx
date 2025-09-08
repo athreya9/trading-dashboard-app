@@ -52,32 +52,48 @@ export function PersonalTradingAdvisor() {
         // Handle the actual data structure - currently shows "NO SIGNALS"
         const signals: TradingSignal[] = []
 
-        // Check if we have actual trading signals or just "NO SIGNALS" messages
-        data.forEach((row: any, index: number) => {
-          if (row['⚠️ NO SIGNALS']) {
-            // Create a display signal for "NO SIGNALS" status
-            signals.push({
-              Date: new Date().toLocaleDateString(),
-              Stock: 'MARKET STATUS',
-              Action: 'HOLD' as "BUY" | "SELL" | "HOLD",
-              Price: 0,
-              Target: undefined,
-              StopLoss: undefined,
-              Confidence: 0,
-            })
-          } else if (row.Stock || row.Symbol) {
-            // Parse actual trading signals if they exist
-            signals.push({
-              Date: row.Date || new Date().toLocaleDateString(),
-              Stock: row.Stock || row.Symbol || `Signal ${index + 1}`,
-              Action: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
-              Price: parseFloat(row.Price || row.EntryPrice || '0') || 0,
-              Target: row.Target ? parseFloat(row.Target) : undefined,
-              StopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
-              Confidence: row.Confidence ? parseFloat(row.Confidence) : undefined,
-            })
-          }
-        })
+        // Check if we have "NO SIGNALS" message
+        const noSignalsRow = data.find((row: any) => row['⚠️ NO SIGNALS'])
+        
+        if (noSignalsRow) {
+          // Show the actual "NO SIGNALS" message from the sheet
+          const message = noSignalsRow['⚠️ NO SIGNALS'] || 'No signals available'
+          signals.push({
+            Date: new Date().toLocaleDateString(),
+            Stock: '⚠️ MARKET STATUS',
+            Action: 'HOLD' as "BUY" | "SELL" | "HOLD",
+            Price: 0,
+            Target: undefined,
+            StopLoss: undefined,
+            Confidence: 0,
+          })
+          
+          // Add the specific message as a second row
+          signals.push({
+            Date: new Date().toLocaleDateString(),
+            Stock: message,
+            Action: 'HOLD' as "BUY" | "SELL" | "HOLD",
+            Price: 0,
+            Target: undefined,
+            StopLoss: undefined,
+            Confidence: 0,
+          })
+        } else {
+          // Parse actual trading signals if they exist
+          data.forEach((row: any, index: number) => {
+            if (row.Stock || row.Symbol) {
+              signals.push({
+                Date: row.Date || new Date().toLocaleDateString(),
+                Stock: row.Stock || row.Symbol || `Signal ${index + 1}`,
+                Action: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
+                Price: parseFloat(row.Price || row.EntryPrice || '0') || 0,
+                Target: row.Target ? parseFloat(row.Target) : undefined,
+                StopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
+                Confidence: row.Confidence ? parseFloat(row.Confidence) : undefined,
+              })
+            }
+          })
+        }
 
         // Determine market mood based on signals
         const buySignals = signals.filter(s => s.Action === 'BUY').length

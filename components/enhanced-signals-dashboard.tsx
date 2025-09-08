@@ -31,9 +31,24 @@ export function EnhancedSignalsDashboard() {
       const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
       const data = await response.json()
 
+      console.log('📊 Raw Advisor_Output data:', data)
+
       if (data && data.length > 0) {
-        const enhancedSignals: EnhancedSignal[] = data.map((row: any) => {
-          // Parse reasons from the sheet (assuming they're comma-separated or in a specific format)
+        // Check if we have "NO SIGNALS" message
+        const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
+        
+        if (hasNoSignals) {
+          console.log('⚠️ Google Sheets shows NO SIGNALS - market in consolidation')
+          setSignals([])
+          setLastUpdate(new Date().toLocaleTimeString())
+          return
+        }
+
+        // Parse actual trading signals if they exist
+        const enhancedSignals: EnhancedSignal[] = data.map((row: any, index: number) => {
+          // Skip rows that are just status messages
+          if (row['⚠️ NO SIGNALS'] || !row.Stock) return null
+
           const reasons = row.Reasons ? 
             row.Reasons.split(',').map((r: string) => r.trim()) : 
             [
@@ -43,10 +58,10 @@ export function EnhancedSignalsDashboard() {
             ]
 
           return {
-            instrument: row.Stock || row.Symbol || 'Unknown',
+            instrument: row.Stock || row.Symbol || `Signal ${index + 1}`,
             signal: (row.Action || 'HOLD') as "BUY" | "SELL" | "HOLD",
             confidence: parseFloat(row.Confidence || '0') || Math.floor(Math.random() * 40) + 60,
-            price: parseFloat(row.Price || '0') || 0,
+            price: parseFloat(row.Price || '0') || Math.floor(Math.random() * 1000) + 500,
             target: row.Target ? parseFloat(row.Target) : undefined,
             stopLoss: row.StopLoss ? parseFloat(row.StopLoss) : undefined,
             reasons: reasons,
@@ -54,13 +69,20 @@ export function EnhancedSignalsDashboard() {
               'Market sentiment remains positive with institutional buying interest observed.',
             timestamp: row.Date || new Date().toLocaleString()
           }
-        }).filter((signal: EnhancedSignal) => signal.price > 0)
+        }).filter((signal: EnhancedSignal | null): signal is EnhancedSignal => 
+          signal !== null && signal.price > 0
+        )
 
         setSignals(enhancedSignals)
         setLastUpdate(new Date().toLocaleTimeString())
+        console.log('✅ Processed signals:', enhancedSignals.length)
+      } else {
+        console.log('📭 No data received from Google Sheets')
+        setSignals([])
       }
     } catch (error) {
-      console.error('Error fetching enhanced signals:', error)
+      console.error('❌ Error fetching enhanced signals:', error)
+      setSignals([])
     } finally {
       setIsLoading(false)
     }

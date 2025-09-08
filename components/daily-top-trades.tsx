@@ -43,22 +43,30 @@ export function DailyTopTrades() {
         let highConfidenceTrades: TradeOpportunity[] = []
         
         if (data && data.length > 0) {
-          // Convert OpenSheet data to TradeOpportunity format
-          const tradesFromSheet = data.map((row: any) => ({
-            stockName: row.Stock || row.Symbol || '',
-            symbol: row.Stock || row.Symbol || '',
-            action: (row.Action || 'BUY') as "BUY" | "SELL",
-            entryPrice: parseFloat(row.Price || row.EntryPrice || '0') || 0,
-            targetPrice: parseFloat(row.Target || row.TargetPrice || '0') || 0,
-            stopLoss: parseFloat(row.StopLoss || '0') || 0,
-            confidenceScore: parseFloat(row.Confidence || '0') || 0,
-            reason: row.Reason || row.Recommendation || 'Technical Analysis',
-            riskRewardRatio: row.RiskReward || '1:2.0',
-          })).filter((trade: TradeOpportunity) => 
-            trade.confidenceScore > 70 && trade.entryPrice > 0
-          )
+          // Check if we have "NO SIGNALS" message
+          const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
           
-          highConfidenceTrades = tradesFromSheet
+          if (hasNoSignals) {
+            console.log("[v0] Google Sheets shows NO SIGNALS - no high confidence trades available")
+            highConfidenceTrades = []
+          } else {
+            // Convert OpenSheet data to TradeOpportunity format
+            const tradesFromSheet = data.map((row: any) => ({
+              stockName: row.Stock || row.Symbol || '',
+              symbol: row.Stock || row.Symbol || '',
+              action: (row.Action || 'BUY') as "BUY" | "SELL",
+              entryPrice: parseFloat(row.Price || row.EntryPrice || '0') || 0,
+              targetPrice: parseFloat(row.Target || row.TargetPrice || '0') || 0,
+              stopLoss: parseFloat(row.StopLoss || '0') || 0,
+              confidenceScore: parseFloat(row.Confidence || '0') || 0,
+              reason: row.Reason || row.Recommendation || 'Technical Analysis',
+              riskRewardRatio: row.RiskReward || '1:2.0',
+            })).filter((trade: TradeOpportunity) => 
+              trade.confidenceScore > 70 && trade.entryPrice > 0 && trade.stockName
+            )
+            
+            highConfidenceTrades = tradesFromSheet
+          }
         }
 
         console.log("[v0] Filtered high confidence trades:", highConfidenceTrades.length)
@@ -107,8 +115,12 @@ export function DailyTopTrades() {
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <AlertCircle className="h-12 w-12 text-yellow-500 mb-4" />
-            <div className="text-lg font-semibold text-foreground mb-2">No high-quality opportunities found.</div>
-            <div className="text-muted-foreground">It's better to preserve capital and wait for tomorrow.</div>
+            <div className="text-lg font-semibold text-foreground mb-2">⚠️ NO SIGNALS</div>
+            <div className="text-muted-foreground mb-2">Market may be in consolidation.</div>
+            <div className="text-muted-foreground">Wait for a clearer setup - it's better to preserve capital.</div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Status from Google Sheets: Updated {new Date().toLocaleTimeString()}
+            </div>
           </div>
         </CardContent>
       </Card>
