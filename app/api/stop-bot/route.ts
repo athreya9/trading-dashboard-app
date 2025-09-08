@@ -3,8 +3,8 @@ import { getBotState, updateBotState } from '@/lib/bot-state';
 
 export async function POST() {
   try {
-    // Get current bot state
-    const currentState = getBotState();
+    // Get current bot state from Google Sheets
+    const currentState = await getBotState();
 
     // Check if bot is already stopped
     if (currentState.status === 'stopped') {
@@ -16,8 +16,8 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    // Stop the bot
-    const newState = updateBotState({
+    // Stop the bot - update state in Google Sheets
+    const newState = await updateBotState({
       status: 'stopped',
       lastStopped: new Date().toLocaleTimeString()
     });
@@ -38,7 +38,11 @@ export async function POST() {
 
   } catch (error) {
     console.error('❌ Error stopping bot:', error);
-    updateBotState({ status: 'error' });
+    try {
+      await updateBotState({ status: 'error' });
+    } catch (updateError) {
+      console.error('❌ Failed to update error state:', updateError);
+    }
     
     return NextResponse.json({
       success: false,

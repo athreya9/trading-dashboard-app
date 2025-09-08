@@ -3,24 +3,24 @@ import { getBotState, updateBotState, isMarketHours } from '@/lib/bot-state';
 
 export async function GET() {
   try {
-    // Get current bot state
-    const currentState = getBotState();
+    // Get current bot state from Google Sheets
+    const currentState = await getBotState();
     
     // Update market hours status
     const marketHours = isMarketHours();
     
     // Auto-stop bot if outside market hours
     if (!marketHours && currentState.status === 'running') {
-      updateBotState({
+      await updateBotState({
         status: 'stopped',
         lastStopped: new Date().toLocaleTimeString(),
         marketHours: false
       });
     } else {
-      updateBotState({ marketHours });
+      await updateBotState({ marketHours });
     }
 
-    const updatedState = getBotState();
+    const updatedState = await getBotState();
     
     console.log('✅ Bot status checked:', updatedState);
 

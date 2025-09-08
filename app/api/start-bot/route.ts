@@ -13,8 +13,8 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    // Get current bot state
-    const currentState = getBotState();
+    // Get current bot state from Google Sheets
+    const currentState = await getBotState();
 
     // Check if bot is already running
     if (currentState.status === 'running') {
@@ -26,8 +26,8 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    // Start the bot
-    const newState = updateBotState({
+    // Start the bot - update state in Google Sheets
+    const newState = await updateBotState({
       status: 'running',
       lastStarted: new Date().toLocaleTimeString(),
       marketHours: true
@@ -48,7 +48,11 @@ export async function POST() {
 
   } catch (error) {
     console.error('❌ Error starting bot:', error);
-    updateBotState({ status: 'error' });
+    try {
+      await updateBotState({ status: 'error' });
+    } catch (updateError) {
+      console.error('❌ Failed to update error state:', updateError);
+    }
     
     return NextResponse.json({
       success: false,

@@ -48,10 +48,10 @@ export function PersonalTradingAdvisor() {
 
       if (data && data.length > 0) {
         console.log('✅ Raw data from Google Sheets:', data)
-        
+
         // Handle the actual data structure - currently shows "NO SIGNALS"
         const signals: TradingSignal[] = []
-        
+
         // Check if we have actual trading signals or just "NO SIGNALS" messages
         data.forEach((row: any, index: number) => {
           if (row['⚠️ NO SIGNALS']) {
