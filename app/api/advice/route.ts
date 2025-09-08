@@ -16,16 +16,20 @@ interface AdviceData {
 
 export async function GET() {
   try {
-    // Authenticate using your secure environment variable
+    // Parse credentials from environment variable
+    const credentials = JSON.parse(process.env.GSHEET_CREDENTIALS || '{}');
+    const sheetId = process.env.GOOGLE_SHEET_ID || '1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo';
+    
+    // Authenticate using the new environment variable format
     const serviceAccountAuth = new JWT({
-      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, '\n'),
+      email: credentials.client_email,
+      key: credentials.private_key?.replace(/\\n/g, '\n'),
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
       ],
     });
 
-    const doc = new GoogleSpreadsheet('1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo', serviceAccountAuth);
+    const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
     
     await doc.loadInfo();
     
