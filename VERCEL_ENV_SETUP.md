@@ -104,12 +104,21 @@ After setting up the environment variables:
    git push origin main
    ```
 
-2. **Check the deployment logs**
+2. **Test the authentication (Recommended)**
+   - Visit: `https://your-app.vercel.app/test-auth`
+   - Click "Test Google Sheets Connection"
+   - Should show ✅ Connection Successful with spreadsheet details
+
+3. **Test the API endpoint directly**
+   - Visit: `https://your-app.vercel.app/api/test-auth`
+   - Should return JSON with `"success": true` and spreadsheet info
+
+4. **Check the deployment logs**
    - Go to Vercel dashboard > Deployments
    - Click on the latest deployment
    - Check for any errors in the logs
 
-3. **Test the API endpoints**
+5. **Test the main API endpoints**
    - Visit: `https://your-app.vercel.app/api/data`
    - Should return Google Sheets data without errors
 
