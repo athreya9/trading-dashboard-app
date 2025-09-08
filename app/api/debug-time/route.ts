@@ -3,12 +3,23 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const now = new Date();
   const utcTime = now.toUTCString();
-  const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000)).toLocaleString();
   
-  const day = now.getDay();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const currentTime = hours * 60 + minutes;
+  // IST calculation
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+  const istTimeString = istTime.toLocaleString();
+  
+  // UTC values
+  const utcDay = now.getDay();
+  const utcHours = now.getHours();
+  const utcMinutes = now.getMinutes();
+  const utcCurrentTime = utcHours * 60 + utcMinutes;
+  
+  // IST values
+  const istDay = istTime.getDay();
+  const istHours = istTime.getHours();
+  const istMinutes = istTime.getMinutes();
+  const istCurrentTime = istHours * 60 + istMinutes;
   
   const marketOpen = 9 * 60 + 15; // 9:15 AM
   const marketClose = 15 * 60 + 30; // 3:30 PM
@@ -16,18 +27,22 @@ export async function GET() {
   return NextResponse.json({
     serverTime: {
       utc: utcTime,
-      ist: istTime,
-      day: day,
-      hours: hours,
-      minutes: minutes,
-      currentTimeMinutes: currentTime
+      ist: istTimeString,
+      utcDay: utcDay,
+      utcHours: utcHours,
+      utcMinutes: utcMinutes,
+      utcCurrentTimeMinutes: utcCurrentTime,
+      istDay: istDay,
+      istHours: istHours,
+      istMinutes: istMinutes,
+      istCurrentTimeMinutes: istCurrentTime
     },
     marketHours: {
       open: marketOpen,
       close: marketClose,
-      isWeekday: day >= 1 && day <= 5,
-      isWithinHours: currentTime >= marketOpen && currentTime <= marketClose,
-      isMarketOpen: day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose
+      isWeekday: istDay >= 1 && istDay <= 5,
+      isWithinHours: istCurrentTime >= marketOpen && istCurrentTime <= marketClose,
+      isMarketOpen: istDay >= 1 && istDay <= 5 && istCurrentTime >= marketOpen && istCurrentTime <= marketClose
     }
   });
 }
