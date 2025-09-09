@@ -25,14 +25,20 @@ export function TradingBotControl() {
 
   const checkBotStatus = async () => {
     try {
+      console.log('🔍 Checking bot status...')
       const response = await fetch('/api/bot-status')
       const result = await response.json()
       
+      console.log('Bot status response:', result)
+      
       if (result.success) {
         setBotStatus(result.status)
+        console.log('✅ Bot status updated:', result.status)
+      } else {
+        console.error('❌ Failed to get bot status:', result.error)
       }
     } catch (error) {
-      console.error('Error checking bot status:', error)
+      console.error('❌ Error checking bot status:', error)
       setBotStatus(prev => ({ ...prev, status: 'error' }))
     }
   }
@@ -196,6 +202,12 @@ export function TradingBotControl() {
               <span className="text-gray-300">Trades Today:</span>
               <span className="text-white font-medium">{botStatus.tradesExecuted || 0}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Bot Activity:</span>
+              <span className="text-green-400 font-medium">
+                {botStatus.status === 'running' ? '🟢 Monitoring Markets' : '🔴 Inactive'}
+              </span>
+            </div>
             {botStatus.lastStarted && (
               <div className="flex justify-between">
                 <span className="text-gray-300">Last Started:</span>
@@ -253,6 +265,25 @@ export function TradingBotControl() {
             </div>
           </div>
         </div>
+
+        {/* Bot Activity Status */}
+        {botStatus.status === 'running' && isMarketHours() && (
+          <div className="bg-green-900/30 border border-green-600 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-green-400">
+              <Bot className="h-4 w-4" />
+              <span className="font-medium">Bot is Active & Monitoring</span>
+            </div>
+            <p className="text-green-200 text-sm mt-1">
+              ✅ Analyzing real-time market data every 15 minutes
+            </p>
+            <p className="text-green-200 text-sm">
+              ✅ Waiting for high-confidence trading opportunities
+            </p>
+            <p className="text-green-100 text-xs mt-1">
+              Current IST Time: {getCurrentISTTime()}
+            </p>
+          </div>
+        )}
 
         {/* Warning */}
         {!isMarketHours() && (
