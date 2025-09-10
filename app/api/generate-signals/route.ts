@@ -47,9 +47,9 @@ async function getPriceDataSheet() {
 
   const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
   await doc.loadInfo();
-  const sheet = doc.sheetsByTitle['Price Data'];
+  const sheet = doc.sheetsByTitle['Price_Data'];
   if (!sheet) {
-    throw new Error("'Price Data' sheet not found in the document.");
+    throw new Error("'Price_Data' sheet not found in the document.");
   }
   return sheet;
 }
