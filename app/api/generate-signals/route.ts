@@ -58,10 +58,14 @@ export async function GET() {
   try {
     // Fetch real price data from Google Sheets using authenticated client
     const sheet = await getPriceDataSheet();
-    const rows = await sheet.getRows();
-    const priceData: PriceData[] = rows.map(row => row.toObject() as unknown as PriceData);
+
+    // OPTIMIZATION: Fetch only the last 10 data rows instead of the entire sheet.
+    // This assumes the sheet has a header row.
+    const offset = Math.max(0, sheet.rowCount - 1 - 10);
+    const rows = await sheet.getRows({ limit: 10, offset });
+    const recentData: PriceData[] = rows.map(row => row.toObject() as unknown as PriceData);
     
-    if (!priceData || priceData.length === 0) {
+    if (recentData.length === 0) {
       return NextResponse.json({
         success: false,
         error: 'No price data available',
@@ -69,8 +73,6 @@ export async function GET() {
       });
     }
     
-    // Get the latest 10 data points for analysis
-    const recentData = priceData.slice(-10);
     const signals: TradingSignal[] = [];
     
     // Analyze each recent data point for trading signals
@@ -188,10 +190,24 @@ export async function GET() {
     
   } catch (error) {
     console.error('❌ Error generating signals:', error);
+    let errorMessage = 'An unexpected error occurred while generating signals.';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes('sheet not found')) {
+        errorMessage = 'The "Price Data" sheet is missing from your Google Sheet.';
+        statusCode = 404;
+      } else if (error.message.toLowerCase().includes('permission denied') || error.message.includes('gaxios')) {
+        errorMessage = 'Permission denied. Ensure the service account has access to the Google Sheet.';
+        statusCode = 403;
+      } else {
+        errorMessage = error.message;
+      }
+    }
     return NextResponse.json({
       success: false,
-      error: 'Failed to generate trading signals',
+      error: errorMessage,
       signals: []
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }

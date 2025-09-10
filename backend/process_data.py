@@ -36,16 +36,19 @@ def check_bot_status(spreadsheet):
     """Check if bot is running from Bot_Control sheet"""
     try:
         bot_control_sheet = spreadsheet.worksheet('Bot_Control')
-        values = bot_control_sheet.get_all_records()
+        records = bot_control_sheet.get_all_records()
         
-        if not values:
+        if not records:
             print("No data found in Bot_Control sheet")
             return False
         
-        # Get the latest status (last row)
-        latest_status = values[-1]
-        status = latest_status.get("status", "").lower()
+        status_record = next((item for item in records if item.get("parameter") == "status"), None)
         
+        if not status_record:
+            print("'status' parameter not found in Bot_Control sheet.")
+            return False
+
+        status = status_record.get("value", "").lower()
         print(f"Bot status: {status}")
         return status == "running"
     

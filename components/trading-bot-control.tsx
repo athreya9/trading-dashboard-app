@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -127,6 +128,49 @@ export function TradingBotControl() {
       default:
         return <Square className="h-4 w-4" />
     }
+  }
+
+  if (botStatus.status === 'loading') {
+    return (
+      <Card className="bg-gradient-to-br from-blue-900 to-purple-900 border-blue-700 text-white shadow-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
+            <Bot className="h-6 w-6" />
+            🤖 TRADING BOT CONTROLS
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Skeleton for Bot Status */}
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-yellow-400">Bot Status</h3>
+              <Skeleton className="h-7 w-24" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="flex justify-between"><span className="text-gray-300">Market Hours:</span><Skeleton className="h-5 w-16" /></div>
+              <div className="flex justify-between"><span className="text-gray-300">Trades Today:</span><Skeleton className="h-5 w-8" /></div>
+              <div className="flex justify-between"><span className="text-gray-300">Bot Activity:</span><Skeleton className="h-5 w-24" /></div>
+              <div className="flex justify-between"><span className="text-gray-300">Last Started:</span><Skeleton className="h-5 w-20" /></div>
+            </div>
+          </div>
+
+          {/* Skeleton for Control Buttons */}
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+            <h3 className="text-lg font-bold text-yellow-400 mb-4">Manual Controls</h3>
+            <div className="flex gap-4 justify-center">
+              <Skeleton className="h-12 w-32" />
+              <Skeleton className="h-12 w-32" />
+            </div>
+          </div>
+
+          {/* Skeleton for Schedule */}
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+            <Skeleton className="h-7 w-48 mb-3" />
+            <Skeleton className="h-5 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

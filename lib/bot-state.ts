@@ -119,18 +119,29 @@ export async function updateBotState(updates: Partial<BotState>): Promise<BotSta
     const sheet = await getBotControlSheet(doc);
     const rows = await sheet.getRows();
     
-    // Update each parameter
+    // For batch updates, it's more efficient to work with cells
+    await sheet.loadCells('A1:B' + (rows.length + 1));
+
+    const newRowsToAdd: { parameter: string, value: string }[] = [];
+    const rowMap = new Map(rows.map(r => [r.get('parameter'), r]));
+
     for (const [key, value] of Object.entries(updates)) {
-      const row = rows.find(r => r.get('parameter') === key);
+      const row = rowMap.get(key);
       if (row) {
-        row.set('value', String(value));
-        await row.save();
+        // Get cell in column B (index 1) for the correct row
+        // row.rowNumber is 1-based and includes header, getCell is 0-indexed
+        const cell = sheet.getCell(row.rowNumber - 1, 1);
+        cell.value = String(value);
       } else {
         // Add new parameter if it doesn't exist
-        await sheet.addRow({ parameter: key, value: String(value) });
+        newRowsToAdd.push({ parameter: key, value: String(value) });
       }
     }
     
+    // Save all modified cells in a single API call
+    await sheet.saveUpdatedCells();
+    if (newRowsToAdd.length > 0) await sheet.addRows(newRowsToAdd);
+
     // Return updated state
     const updatedState = await getBotState();
     console.log('✅ Bot state updated in Google Sheets:', updatedState);

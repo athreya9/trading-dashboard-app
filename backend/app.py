@@ -69,20 +69,24 @@ def get_bot_status():
         
         bot_control_sheet = spreadsheet.worksheet('Bot_Control')
         
-        # Get all values from the sheet
-        values = bot_control_sheet.get_all_records()
-        if not values:
+        records = bot_control_sheet.get_all_records()
+        if not records:
             return jsonify({"error": "No data found in Bot_Control sheet"}), 404
         
-        # Get the latest status (last row)
-        latest_status = values[-1]
+        state = {}
+        for record in records:
+            param = record.get('parameter')
+            value = record.get('value')
+            if param:
+                state[param] = value
+
+        # Type conversions for consistency with frontend expectations
+        if 'marketHours' in state:
+            state['marketHours'] = str(state['marketHours']).lower() == 'true'
+        if 'tradesExecuted' in state:
+            state['tradesExecuted'] = int(state['tradesExecuted']) if str(state['tradesExecuted']).isdigit() else 0
         
-        return jsonify({
-            "status": latest_status.get("status", "unknown"),
-            "last_started": latest_status.get("last_started", ""),
-            "market_hours": latest_status.get("market_hours", False),
-            "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()
-        })
+        return jsonify({**state, "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()})
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
