@@ -61,26 +61,10 @@ export function EnhancedSignalsDashboard() {
         setLastUpdate(new Date().toLocaleTimeString())
         console.log('✅ Processed real signals:', enhancedSignals.length)
         return
+      } else if (signalsData.error) {
+        console.error('❌ Error from generate-signals API:', signalsData.error);
       }
 
-      // Fallback to Advisor_Output sheet
-      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const data = await response.json()
-
-      console.log('📊 Fallback to Advisor_Output data:', data)
-
-      if (data && data.length > 0) {
-        // Check if we have "NO SIGNALS" message
-        const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
-        
-        if (hasNoSignals) {
-          console.log('⚠️ Google Sheets shows NO SIGNALS - market in consolidation')
-          setSignals([])
-          setLastUpdate(new Date().toLocaleTimeString())
-          return
-        }
-      }
-      
       // If no signals from either source
       console.log('📭 No signals available from any source')
       setSignals([])

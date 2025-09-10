@@ -62,20 +62,9 @@ export function DailyTopTrades() {
                 riskRewardRatio: riskReward,
               }
             })
-        } else {
-          // Fallback to Advisor_Output sheet
-          const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-          const data = await response.json()
-          
-          if (data && data.length > 0) {
-            const hasNoSignals = data.some((row: any) => row['⚠️ NO SIGNALS'])
-            
-            if (hasNoSignals) {
-              console.log("[v0] Google Sheets shows NO SIGNALS - no high confidence trades available")
-              highConfidenceTrades = []
-            }
-          }
-        }
+        } else if (signalsData.error) {
+          console.error("[v0] Error from generate-signals API:", signalsData.error);
+        } 
 
         console.log("[v0] Filtered high confidence trades:", highConfidenceTrades.length)
 

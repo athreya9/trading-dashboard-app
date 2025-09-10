@@ -18,15 +18,13 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
 
   const fetchRealChartData = async () => {
     try {
-      // Fetch real price data from Google Sheets
-      const priceResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price%20Data')
+      // Fetch real price data from our secure API endpoint
+      const priceResponse = await fetch('/api/price-data')
       const priceData = await priceResponse.json()
       
-      console.log("[v0] Fetched price data length:", priceData?.length)
-      
-      if (priceData && priceData.length > 0 && !priceData.error) {
+      if (priceData.success && priceData.data && priceData.data.length > 0) {
         // Convert real Price_Data to chart format
-        const chartData = priceData.map((row: any) => ({
+        const chartData = priceData.data.map((row: any) => ({
           date: row.timestamp || new Date().toLocaleDateString(),
           open: parseFloat(row.open || '0') || 0,
           high: parseFloat(row.high || '0') || 0,
@@ -34,38 +32,11 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
           close: parseFloat(row.close || '0') || 0,
           volume: parseFloat(row.volume || '0') || 0,
         })).filter((item: any) => item.close > 0)
-        
-        console.log("[v0] Processed real chart data points:", chartData.length)
-        return chartData.slice(-50) // Get last 50 data points
+
+        console.log("[v0] Processed real chart data points:", chartData.length);
+        return chartData;
       } else {
-        console.log("[v0] No real price data available, generating sample chart data")
-        
-        // Generate realistic sample chart data for NIFTY 50
-        const sampleData = []
-        const basePrice = 24750 // Current NIFTY level from real data
-        let currentPrice = basePrice
-        
-        for (let i = 0; i < 30; i++) {
-          const variation = (Math.random() - 0.5) * 100 // ±50 points variation
-          const open = currentPrice
-          const close = currentPrice + variation
-          const high = Math.max(open, close) + Math.random() * 30
-          const low = Math.min(open, close) - Math.random() * 30
-          
-          sampleData.push({
-            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            open: Math.round(open * 100) / 100,
-            high: Math.round(high * 100) / 100,
-            low: Math.round(low * 100) / 100,
-            close: Math.round(close * 100) / 100,
-            volume: Math.floor(Math.random() * 1000000) + 500000,
-          })
-          
-          currentPrice = close
-        }
-        
-        console.log("[v0] Generated sample chart data points:", sampleData.length)
-        return sampleData
+        console.error("[v0] No real price data available from API:", priceData.error);
       }
     } catch (error) {
       console.error("[v0] Error fetching chart data:", error)
@@ -146,35 +117,6 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
         ctx.fillText(`₹${price.toFixed(0)}`, 35, y + 4)
       }
 
-      // Draw signals
-      if (chartData.length > 10) {
-        // Buy signal
-        const buyIndex = chartData.length - 10
-        const buyX = 40 + buyIndex * candleWidth + candleWidth / 2
-        const buyY = 350 - ((chartData[buyIndex].low - minPrice) / priceRange) * 300 + 20
-
-        ctx.fillStyle = "#22c55e"
-        ctx.beginPath()
-        ctx.moveTo(buyX, buyY)
-        ctx.lineTo(buyX - 8, buyY + 15)
-        ctx.lineTo(buyX + 8, buyY + 15)
-        ctx.closePath()
-        ctx.fill()
-
-        // Sell signal
-        const sellIndex = chartData.length - 5
-        const sellX = 40 + sellIndex * candleWidth + candleWidth / 2
-        const sellY = 350 - ((chartData[sellIndex].high - minPrice) / priceRange) * 300 - 20
-
-        ctx.fillStyle = "#ef4444"
-        ctx.beginPath()
-        ctx.moveTo(sellX, sellY)
-        ctx.lineTo(sellX - 8, sellY - 15)
-        ctx.lineTo(sellX + 8, sellY - 15)
-        ctx.closePath()
-        ctx.fill()
-      }
-
       console.log("[v0] Chart drawing completed successfully")
     } catch (error) {
       console.error("[v0] Error in drawChart:", error)
@@ -235,14 +177,6 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
             <span>Bearish Candle</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-green-500"></div>
-            <span>Buy Signal</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-red-500"></div>
-            <span>Sell Signal</span>
           </div>
         </div>
       </CardContent>

@@ -12,21 +12,21 @@ export function MarketStatus() {
   useEffect(() => {
     const fetchMarketStatus = async () => {
       try {
-        // REAL API call - no hardcoded data
-        const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-        const data = await response.json()
+        // Fetch signals from our secure API
+        const response = await fetch('/api/generate-signals')
+        const signalsData = await response.json()
         
-        if (data && data.length > 0) {
-          // Calculate market mood based on REAL signals from Google Sheets
-          const buySignals = data.filter((row: any) => row.Action?.toUpperCase() === 'BUY').length
-          const sellSignals = data.filter((row: any) => row.Action?.toUpperCase() === 'SELL').length
+        if (signalsData.success && signalsData.signals.length > 0) {
+          // Calculate market mood based on generated signals
+          const buySignals = signalsData.signals.filter((s: any) => s.Action === 'BUY').length
+          const sellSignals = signalsData.signals.filter((s: any) => s.Action === 'SELL').length
           
           let mood = 'NEUTRAL'
           if (buySignals > sellSignals) mood = 'BULLISH'
           else if (sellSignals > buySignals) mood = 'BEARISH'
           
           setMarketMood(mood)
-          setTotalSignals(data.length)
+          setTotalSignals(signalsData.signals.length)
           setLastUpdate(new Date().toLocaleTimeString())
         }
       } catch (error) {

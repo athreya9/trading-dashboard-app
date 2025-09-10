@@ -60,28 +60,16 @@ export default function NiftyQuantumPlatform() {
     setIsRefreshing(true)
 
     try {
-      // Try to fetch real NIFTY data from Yahoo Finance API (free)
-      try {
-        const niftyResponse = await fetch('/api/nifty-data')
-        const niftyResult = await niftyResponse.json()
-        
-        if (niftyResult.success && niftyResult.data) {
-          setNiftyData(niftyResult.data)
-          console.log('✅ Real NIFTY data loaded:', niftyResult.data)
-        } else {
-          throw new Error('Failed to fetch real NIFTY data')
-        }
-      } catch (niftyError) {
-        console.log('⚠️ Using fallback NIFTY data:', niftyError)
-        // Fallback to realistic mock data with some variation
-        const basePrice = 21850 + (Math.random() - 0.5) * 200
-        setNiftyData({
-          currentPrice: basePrice,
-          todaysHigh: basePrice + Math.random() * 100,
-          todaysLow: basePrice - Math.random() * 100,
-          openingPrice: basePrice + (Math.random() - 0.5) * 50,
-          previousClose: basePrice + (Math.random() - 0.5) * 30,
-        })
+      // Fetch real NIFTY data from our own API endpoint
+      const niftyResponse = await fetch('/api/nifty-data')
+      const niftyResult = await niftyResponse.json()
+      
+      if (niftyResult.success && niftyResult.data) {
+        setNiftyData(niftyResult.data)
+        console.log('✅ Real NIFTY data loaded:', niftyResult.data)
+      } else {
+        // If fetching fails, the component will show 0s, which is better than fake data.
+        console.error('❌ Failed to fetch real NIFTY data:', niftyResult.error)
       }
 
       // Also check Google Sheets for any updates
