@@ -17,7 +17,6 @@ interface TradingSignal {
 
 interface AdvisorData {
   systemStatus: "operational" | "warning" | "error"
-  dataFreshness: number // seconds
   marketMood: "BULLISH" | "BEARISH" | "NEUTRAL"
   signals: TradingSignal[]
   timeline: {
@@ -29,7 +28,6 @@ interface AdvisorData {
 export function PersonalTradingAdvisor() {
   const [advisorData, setAdvisorData] = useState<AdvisorData>({
     systemStatus: "operational",
-    dataFreshness: 0,
     marketMood: "NEUTRAL",
     signals: [],
     timeline: {
@@ -37,21 +35,19 @@ export function PersonalTradingAdvisor() {
       nextCheck: "Loading...",
     },
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   const fetchTradingData = async () => {
     setIsLoading(true)
     try {
-      // First try to get generated signals from real price data
       const signalsResponse = await fetch('/api/generate-signals')
       const signalsData = await signalsResponse.json()
       
-      console.log('✅ Generated signals from real price data:', signalsData)
+      console.log('✅ Fetched signals from API:', signalsData)
 
-      if (signalsData.success && signalsData.signals && signalsData.signals.length > 0) {
-        // Use real generated signals
+      if (signalsData.success && signalsData.signals) {
         const signals: TradingSignal[] = signalsData.signals.map((signal: any) => ({
-          Date: new Date(signal.Date).toLocaleDateString(),
+          Date: signal.Date, // Use the pre-formatted date from the API
           Stock: signal.Stock,
           Action: signal.Action as "BUY" | "SELL" | "HOLD",
           Price: signal.Price,
@@ -60,75 +56,30 @@ export function PersonalTradingAdvisor() {
           Confidence: signal.Confidence,
         }))
 
-        // Determine market mood based on real signals
         const buySignals = signals.filter(s => s.Action === 'BUY').length
         const sellSignals = signals.filter(s => s.Action === 'SELL').length
         const marketMood = buySignals > sellSignals ? 'BULLISH' : sellSignals > buySignals ? 'BEARISH' : 'NEUTRAL'
 
-        setAdvisorData(prev => ({
-          ...prev,
+        setAdvisorData({
           signals: signals,
-          dataFreshness: 0,
           marketMood: marketMood as "BULLISH" | "BEARISH" | "NEUTRAL",
           systemStatus: "operational",
           timeline: {
-            signalGenerated: new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
+            signalGenerated: signalsData.lastUpdate || new Date().toLocaleTimeString(),
+            nextCheck: new Date(Date.now() + 30 * 1000).toLocaleTimeString(),
           },
-        }))
-        return
-      }
-
-      // Fallback to Advisor_Output sheet
-      const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const data = await response.json()
-
-      if (data && data.length > 0) {
-        console.log('✅ Fallback to Advisor_Output data:', data)
-
-        const signals: TradingSignal[] = []
-        const noSignalsRow = data.find((row: any) => row['⚠️ NO SIGNALS'])
-        
-        if (noSignalsRow) {
-          const message = noSignalsRow['⚠️ NO SIGNALS'] || 'No signals available'
-          signals.push({
-            Date: new Date().toLocaleDateString(),
-            Stock: '⚠️ MARKET STATUS',
-            Action: 'HOLD' as "BUY" | "SELL" | "HOLD",
-            Price: 0,
-            Target: undefined,
-            StopLoss: undefined,
-            Confidence: 0,
-          })
-          
-          signals.push({
-            Date: new Date().toLocaleDateString(),
-            Stock: message,
-            Action: 'HOLD' as "BUY" | "SELL" | "HOLD",
-            Price: 0,
-            Target: undefined,
-            StopLoss: undefined,
-            Confidence: 0,
-          })
-        }
-
-        setAdvisorData(prev => ({
-          ...prev,
-          signals: signals,
-          dataFreshness: 0,
-          marketMood: 'NEUTRAL',
-          systemStatus: "operational",
-          timeline: {
-            signalGenerated: new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 30 * 60000).toLocaleTimeString(),
-          },
-        }))
+        })
       } else {
         setAdvisorData(prev => ({
           ...prev,
-          systemStatus: "operational",
+          systemStatus: "warning",
           signals: [],
+          timeline: {
+            signalGenerated: signalsData.lastUpdate || new Date().toLocaleTimeString(),
+            nextCheck: new Date(Date.now() + 30 * 1000).toLocaleTimeString(),
+          },
         }))
+        console.error('Failed to fetch signals:', signalsData.error);
       }
     } catch (error) {
       console.error('Error fetching trading data:', error)
@@ -143,7 +94,7 @@ export function PersonalTradingAdvisor() {
 
   useEffect(() => {
     fetchTradingData()
-    const interval = setInterval(fetchTradingData, 30000) // Update every 30 seconds
+    const interval = setInterval(fetchTradingData, 30 * 1000) // Update every 30 seconds
     return () => clearInterval(interval)
   }, [])
 
@@ -196,28 +147,30 @@ export function PersonalTradingAdvisor() {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* System Status */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               {advisorData.systemStatus === "operational" ? (
                 <CheckCircle className="h-5 w-5 text-green-500" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <AlertCircle className="h-5 w-5 text-red-500" />
               )}
               <span className="text-lg font-semibold">🟢 System Status:</span>
             </div>
             <span className={getStatusColor(advisorData.systemStatus)}>
-              All systems operational. Data is {advisorData.dataFreshness} seconds fresh.
+              All systems operational.
             </span>
           </div>
-          <button
-            onClick={fetchTradingData}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-md text-sm transition-colors"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            {isLoading ? "Loading..." : "Refresh"}
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="text-xs text-muted-foreground text-right">
+              <div>Last Refreshed:</div>
+              <div className="font-mono">{advisorData.timeline.signalGenerated}</div>
+            </div>
+            <Button onClick={fetchTradingData} disabled={isLoading} size="sm">
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : "mr-2"}`} />
+              {isLoading ? "Loading..." : "Refresh"}
+            </Button>
+          </div>
         </div>
 
         {/* Trading Signals Table */}

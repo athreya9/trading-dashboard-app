@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -55,14 +56,15 @@ export function TradingBotControl() {
       
       if (result.success) {
         console.log('✅ Bot started successfully');
+        toast.success("Trading bot has been started successfully.");
         setBotStatus(result.status); // Use the state returned from the API
       } else {
         console.error('❌ Failed to start bot:', result.error);
-        alert(`Failed to start bot: ${result.error}`)
+        toast.error("Failed to start bot", { description: result.error });
       }
     } catch (error) {
       console.error('❌ Error starting bot:', error)
-      alert(`Error starting bot: ${(error as Error).message}`)
+      toast.error("Error starting bot", { description: (error as Error).message });
       setBotStatus(prev => ({ ...prev, status: 'error' }))
     } finally {
       setIsLoading(false)
@@ -80,14 +82,15 @@ export function TradingBotControl() {
       
       if (result.success) {
         console.log('✅ Bot stopped successfully');
+        toast.success("Trading bot has been stopped successfully.");
         setBotStatus(result.status); // Use the state returned from the API
       } else {
         console.error('❌ Failed to stop bot:', result.error);
-        alert(`Failed to stop bot: ${result.error}`)
+        toast.error("Failed to stop bot", { description: result.error });
       }
     } catch (error) {
       console.error('❌ Error stopping bot:', error)
-      alert(`Error stopping bot: ${(error as Error).message}`)
+      toast.error("Error stopping bot", { description: (error as Error).message });
       setBotStatus(prev => ({ ...prev, status: 'error' }))
     } finally {
       setIsLoading(false)
