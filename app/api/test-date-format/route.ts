@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { formatGoogleSheetsTimestamp, formatISTTime } from '@/lib/ist-utils';
+import { formatGoogleSheetsTimestamp } from '@/lib/ist-utils';
 
 export async function GET() {
   // Sample timestamp from your Google Sheets
@@ -8,8 +8,7 @@ export async function GET() {
   return NextResponse.json({
     originalTimestamp: sampleTimestamp,
     formattedWithGoogleSheetsFunction: formatGoogleSheetsTimestamp(sampleTimestamp),
-    formattedWithOldFunction: formatISTTime(sampleTimestamp),
-    explanation: "Google Sheets timestamps are already in IST, so we shouldn't add offset",
+    explanation: "The old 'formatISTTime' function was removed as it was causing incorrect date calculations. 'formatGoogleSheetsTimestamp' is the correct function to use for timestamps from the sheet.",
     correctFormat: "Should show September 5, 2025, 3:15 PM (not September 6)"
   });
 }

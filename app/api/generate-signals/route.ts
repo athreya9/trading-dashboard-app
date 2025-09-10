@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { formatGoogleSheetsTimestamp, getISTTimestamp } from '@/lib/ist-utils';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 
 interface PriceData {
   timestamp: string;
@@ -33,11 +35,31 @@ interface TradingSignal {
   MACD: number;
 }
 
+async function getPriceDataSheet() {
+  const credentials = JSON.parse(process.env.GSHEET_CREDENTIALS || '{}');
+  const sheetId = process.env.GOOGLE_SHEET_ID || '1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo';
+
+  const serviceAccountAuth = new JWT({
+    email: credentials.client_email,
+    key: credentials.private_key?.replace(/\\n/g, '\n'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  });
+
+  const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
+  await doc.loadInfo();
+  const sheet = doc.sheetsByTitle['Price Data'];
+  if (!sheet) {
+    throw new Error("'Price Data' sheet not found in the document.");
+  }
+  return sheet;
+}
+
 export async function GET() {
   try {
-    // Fetch real price data from Google Sheets
-    const response = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Price%20Data');
-    const priceData: PriceData[] = await response.json();
+    // Fetch real price data from Google Sheets using authenticated client
+    const sheet = await getPriceDataSheet();
+    const rows = await sheet.getRows();
+    const priceData: PriceData[] = rows.map(row => row.toObject() as unknown as PriceData);
     
     if (!priceData || priceData.length === 0) {
       return NextResponse.json({

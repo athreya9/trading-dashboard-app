@@ -1,6 +1,6 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import { getISTTime, formatISTTimeOnly, isISTMarketHours } from './ist-utils';
+import { formatISTTimeOnly } from './ist-utils';
 
 // Shared bot state across all API endpoints
 interface BotState {
@@ -139,8 +139,4 @@ export async function updateBotState(updates: Partial<BotState>): Promise<BotSta
     console.error('❌ Failed to update bot state:', error);
     throw error;
   }
-}
-
-export function isMarketHours(): boolean {
-  return isISTMarketHours()
 }
