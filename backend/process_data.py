@@ -13,17 +13,20 @@ SCOPES = ['https://www.googleapis.com/spreadsheets/read-write']
 def get_spreadsheet():
     """Initialize Google Sheets connection"""
     try:
-        # Get credentials from environment variable
-        creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+        creds_json = os.getenv('GSHEET_CREDENTIALS')
         if not creds_json:
-            raise ValueError("GOOGLE_SHEETS_CREDENTIALS environment variable not set")
+            # Fallback for older variable name for compatibility
+            creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+            if not creds_json:
+                raise ValueError("GSHEET_CREDENTIALS environment variable not set")
         
         creds_dict = json.loads(creds_json)
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
         
-        # Your Google Sheets ID
-        spreadsheet_id = "1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo"
+        spreadsheet_id = os.getenv('GOOGLE_SHEET_ID')
+        if not spreadsheet_id:
+            raise ValueError("GOOGLE_SHEET_ID environment variable not set")
         return client.open_by_key(spreadsheet_id)
     except Exception as e:
         print(f"Error connecting to Google Sheets: {e}")

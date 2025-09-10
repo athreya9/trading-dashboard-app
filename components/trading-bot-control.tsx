@@ -53,16 +53,10 @@ export function TradingBotControl() {
       console.log('Start bot response:', result)
       
       if (result.success) {
-        console.log('✅ Bot started successfully')
-        setBotStatus(prev => ({ 
-          ...prev, 
-          status: 'running',
-          lastStarted: getCurrentISTTime()
-        }))
-        // Refresh status after starting
-        setTimeout(checkBotStatus, 1000)
+        console.log('✅ Bot started successfully');
+        setBotStatus(result.status); // Use the state returned from the API
       } else {
-        console.error('❌ Failed to start bot:', result.error)
+        console.error('❌ Failed to start bot:', result.error);
         alert(`Failed to start bot: ${result.error}`)
       }
     } catch (error) {
@@ -84,16 +78,10 @@ export function TradingBotControl() {
       console.log('Stop bot response:', result)
       
       if (result.success) {
-        console.log('✅ Bot stopped successfully')
-        setBotStatus(prev => ({ 
-          ...prev, 
-          status: 'stopped',
-          lastStopped: getCurrentISTTime()
-        }))
-        // Refresh status after stopping
-        setTimeout(checkBotStatus, 1000)
+        console.log('✅ Bot stopped successfully');
+        setBotStatus(result.status); // Use the state returned from the API
       } else {
-        console.error('❌ Failed to stop bot:', result.error)
+        console.error('❌ Failed to stop bot:', result.error);
         alert(`Failed to stop bot: ${result.error}`)
       }
     } catch (error) {
@@ -141,37 +129,6 @@ export function TradingBotControl() {
     }
   }
 
-  const isMarketHours = () => {
-    // Get current time in IST (UTC + 5:30)
-    const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC + 5:30
-    const istTime = new Date(now.getTime() + istOffset)
-    
-    const day = istTime.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const hours = istTime.getHours()
-    const minutes = istTime.getMinutes()
-    const currentTime = hours * 60 + minutes
-    
-    // Indian Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
-    const marketOpen = 9 * 60 + 15 // 9:15 AM IST
-    const marketClose = 15 * 60 + 30 // 3:30 PM IST
-    
-    return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose
-  }
-
-  const getCurrentISTTime = () => {
-    const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000
-    const istTime = new Date(now.getTime() + istOffset)
-    return istTime.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    })
-  }
-
   return (
     <Card className="bg-gradient-to-br from-blue-900 to-purple-900 border-blue-700 text-white shadow-2xl">
       <CardHeader>
@@ -194,8 +151,8 @@ export function TradingBotControl() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-300">Market Hours:</span>
-              <span className={`font-medium ${isMarketHours() ? 'text-green-400' : 'text-red-400'}`}>
-                {isMarketHours() ? '🟢 OPEN' : '🔴 CLOSED'}
+              <span className={`font-medium ${botStatus.marketHours ? 'text-green-400' : 'text-red-400'}`}>
+                {botStatus.marketHours ? '🟢 OPEN' : '🔴 CLOSED'}
               </span>
             </div>
             <div className="flex justify-between">
@@ -267,7 +224,7 @@ export function TradingBotControl() {
         </div>
 
         {/* Bot Activity Status */}
-        {botStatus.status === 'running' && isMarketHours() && (
+        {botStatus.status === 'running' && botStatus.marketHours && (
           <div className="bg-green-900/30 border border-green-600 rounded-lg p-3">
             <div className="flex items-center gap-2 text-green-400">
               <Bot className="h-4 w-4" />
@@ -279,14 +236,11 @@ export function TradingBotControl() {
             <p className="text-green-200 text-sm">
               ✅ Waiting for high-confidence trading opportunities
             </p>
-            <p className="text-green-100 text-xs mt-1">
-              Current IST Time: {getCurrentISTTime()}
-            </p>
           </div>
         )}
 
         {/* Warning */}
-        {!isMarketHours() && (
+        {!botStatus.marketHours && (
           <div className="bg-yellow-900/30 border border-yellow-600 rounded-lg p-3">
             <div className="flex items-center gap-2 text-yellow-400">
               <Clock className="h-4 w-4" />
@@ -294,9 +248,6 @@ export function TradingBotControl() {
             </div>
             <p className="text-yellow-200 text-sm mt-1">
               Trading bot is inactive outside Indian market hours (Mon-Fri 9:15 AM - 3:30 PM IST)
-            </p>
-            <p className="text-yellow-100 text-xs mt-1">
-              Current IST Time: {getCurrentISTTime()}
             </p>
           </div>
         )}

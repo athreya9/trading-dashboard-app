@@ -16,21 +16,39 @@ SCOPES = ['https://www.googleapis.com/spreadsheets/read-write']
 def get_spreadsheet():
     """Initialize Google Sheets connection"""
     try:
-        # Get credentials from environment variable
-        creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+        creds_json = os.getenv('GSHEET_CREDENTIALS')
         if not creds_json:
-            raise ValueError("GOOGLE_SHEETS_CREDENTIALS environment variable not set")
+            # Fallback for older variable name for compatibility
+            creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+            if not creds_json:
+                raise ValueError("GSHEET_CREDENTIALS environment variable not set")
         
         creds_dict = json.loads(creds_json)
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
         
-        # Your Google Sheets ID
-        spreadsheet_id = "1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo"
+        spreadsheet_id = os.getenv('GOOGLE_SHEET_ID')
+        if not spreadsheet_id:
+            raise ValueError("GOOGLE_SHEET_ID environment variable not set")
+            
         return client.open_by_key(spreadsheet_id)
     except Exception as e:
         print(f"Error connecting to Google Sheets: {e}")
         return None
+
+def update_bot_state_in_sheet(sheet, updates):
+    """Finds and updates key-value pairs in the Bot_Control sheet."""
+    cells_to_update = []
+    for param, value in updates.items():
+        try:
+            cell = sheet.find(param)
+            cells_to_update.append(gspread.Cell(cell.row, cell.col + 1, str(value)))
+        except gspread.exceptions.CellNotFound:
+            print(f"Parameter '{param}' not found in sheet. Appending new row.")
+            sheet.append_row([param, str(value)])
+    
+    if cells_to_update:
+        sheet.update_cells(cells_to_update)
 
 @app.route('/')
 def home():
@@ -82,10 +100,12 @@ def start_bot():
         # Get current IST time
         ist_time = datetime.now(pytz.timezone('Asia/Kolkata'))
         
-        # Update the bot status
-        bot_control_sheet.update('A2', 'running')  # Status column
-        bot_control_sheet.update('B2', ist_time.strftime('%I:%M:%S %p'))  # Last started
-        bot_control_sheet.update('C2', 'TRUE')  # Market hours
+        updates = {
+            "status": "running",
+            "lastStarted": ist_time.strftime('%I:%M:%S %p'),
+            "marketHours": True
+        }
+        update_bot_state_in_sheet(bot_control_sheet, updates)
         
         return jsonify({
             "message": "Bot started successfully",
@@ -109,9 +129,12 @@ def stop_bot():
         # Get current IST time
         ist_time = datetime.now(pytz.timezone('Asia/Kolkata'))
         
-        # Update the bot status
-        bot_control_sheet.update('A2', 'stopped')  # Status column
-        bot_control_sheet.update('C2', 'FALSE')  # Market hours
+        updates = {
+            "status": "stopped",
+            "lastStopped": ist_time.strftime('%I:%M:%S %p'),
+            "marketHours": False
+        }
+        update_bot_state_in_sheet(bot_control_sheet, updates)
         
         return jsonify({
             "message": "Bot stopped successfully",

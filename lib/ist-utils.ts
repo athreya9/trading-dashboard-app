@@ -1,127 +1,75 @@
 // Utility functions for Indian Standard Time (IST) handling
 
 /**
- * Get current time in IST
+ * Get current time in IST.
+ * NOTE: This creates a Date object whose UTC time represents the wall-clock time in IST.
+ * Use getUTCFoo() methods to extract values.
  */
-export function getISTTime(): Date {
-  const now = new Date()
-  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC + 5:30
-  return new Date(now.getTime() + istOffset)
+function getISTDate(date: Date = new Date()): Date {
+  const istOffset = 330 * 60 * 1000; // 5.5 hours in milliseconds
+  return new Date(date.getTime() + istOffset);
 }
 
 /**
- * Format date/time in IST
- * Assumes input timestamps from Google Sheets are already in IST
+ * Check if current IST time is within Indian market hours (9:15 AM - 3:30 PM).
+ * This function is server-agnostic and works correctly on UTC environments like Vercel.
  */
-export function formatISTTime(date?: Date | string): string {
-  if (date) {
-    // Parse the date assuming it's already in IST format from Google Sheets
-    const inputDate = new Date(date)
-    
-    // Format directly without adding offset (data is already in IST)
-    return inputDate.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    })
+export function isMarketHours(): boolean {
+  const istDate = getISTDate();
+
+  // Use getUTC* methods because the date object's time is shifted to represent IST
+  const day = istDate.getUTCDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+  const hours = istDate.getUTCHours();
+  const minutes = istDate.getUTCMinutes();
+
+  // Indian Market hours: Monday-Friday
+  if (day < 1 || day > 5) {
+    return false;
   }
-  
-  // For current time, get IST time
-  const istTime = getISTTime()
-  return istTime.toLocaleString('en-IN', { 
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  })
+
+  // 9:15 AM to 3:30 PM IST
+  const currentTimeInMinutes = hours * 60 + minutes;
+  const marketOpen = 9 * 60 + 15;   // 555
+  const marketClose = 15 * 60 + 30; // 930
+
+  return currentTimeInMinutes >= marketOpen && currentTimeInMinutes <= marketClose;
 }
 
 /**
  * Format time only in IST
  */
 export function formatISTTimeOnly(date?: Date | string): string {
-  const targetDate = date ? new Date(date) : getISTTime()
-  
-  return targetDate.toLocaleTimeString('en-IN', { 
+  // Use toLocaleTimeString which is reliable for formatting
+  const targetDate = date ? new Date(date) : new Date();
+  return targetDate.toLocaleTimeString('en-IN', {
     timeZone: 'Asia/Kolkata',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: true
-  })
-}
-
-/**
- * Format date only in IST
- */
-export function formatISTDateOnly(date?: Date | string): string {
-  const targetDate = date ? new Date(date) : getISTTime()
-  
-  return targetDate.toLocaleDateString('en-IN', { 
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
-}
-
-/**
- * Check if current IST time is within market hours
- */
-export function isISTMarketHours(): boolean {
-  const istTime = getISTTime()
-  const day = istTime.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const hours = istTime.getHours()
-  const minutes = istTime.getMinutes()
-  const currentTime = hours * 60 + minutes
-  
-  // Indian Market hours: Monday-Friday, 9:15 AM - 3:30 PM IST
-  const marketOpen = 9 * 60 + 15 // 9:15 AM IST
-  const marketClose = 15 * 60 + 30 // 3:30 PM IST
-  
-  return day >= 1 && day <= 5 && currentTime >= marketOpen && currentTime <= marketClose
+    hour12: true,
+  });
 }
 
 /**
  * Get IST timestamp for API responses
  */
 export function getISTTimestamp(): string {
-  return getISTTime().toISOString()
-}
-
-/**
- * Convert UTC timestamp to IST display format
- */
-export function convertUTCToIST(utcTimestamp: string): string {
-  const utcDate = new Date(utcTimestamp)
-  const istOffset = 5.5 * 60 * 60 * 1000
-  const istDate = new Date(utcDate.getTime() + istOffset)
-  
-  return istDate.toLocaleString('en-IN', { 
+  return new Date().toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  })
+    hour12: false,
+  }).replace(',', '');
 }
 
 /**
  * Format Google Sheets timestamp (already in IST) for display
  */
 export function formatGoogleSheetsTimestamp(timestamp: string): string {
+  if (!timestamp || !timestamp.includes(' ')) return "Invalid Date";
   // Google Sheets timestamps are already in IST format like "2025-09-05 15:15:00"
   // Parse the timestamp components directly to avoid timezone conversion
   const [datePart, timePart] = timestamp.split(' ')
@@ -129,10 +77,10 @@ export function formatGoogleSheetsTimestamp(timestamp: string): string {
   const [hour, minute, second] = timePart.split(':')
   
   // Convert to 12-hour format
-  const hour24 = parseInt(hour)
-  const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24
-  const ampm = hour24 >= 12 ? 'pm' : 'am'
+  const hour24 = parseInt(hour, 10);
+  const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+  const ampm = hour24 >= 12 ? 'PM' : 'AM';
   
   // Format as DD/MM/YYYY, HH:MM:SS AM/PM
-  return `${day}/${month}/${year}, ${hour12.toString().padStart(2, '0')}:${minute}:${second} ${ampm}`
+  return `${day}/${month}/${year}, ${hour12.toString().padStart(2, '0')}:${minute}:${second} ${ampm}`;
 }
