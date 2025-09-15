@@ -77,7 +77,7 @@ export default function NiftyQuantumPlatform() {
       }
 
       // Also check Google Sheets for any updates
-      const advisorResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
+      const advisorResponse = await fetch('/api/advisor-output')
       if (advisorResponse.ok) {
         const advisorResult = await advisorResponse.json()
         if (Array.isArray(advisorResult)) {
@@ -85,9 +85,10 @@ export default function NiftyQuantumPlatform() {
           console.log('📊 Google Sheets Advisor_Output:', advisorResult)
         }
       } else {
-        console.error('❌ Failed to fetch Google Sheets data:', advisorResponse.status, advisorResponse.statusText)
-        toast.warning("Could not fetch advisor data from Google Sheets.", {
-          description: `Status: ${advisorResponse.status} ${advisorResponse.statusText}`,
+        const errorResult = await advisorResponse.json().catch(() => ({ details: 'Could not parse error response.' }));
+        console.error('❌ Failed to fetch advisor data:', errorResult.error)
+        toast.warning("Could not fetch advisor data.", {
+          description: errorResult.details || `The server responded with status ${advisorResponse.status}.`,
         })
       }
 

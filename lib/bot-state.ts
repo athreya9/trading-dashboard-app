@@ -1,6 +1,5 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
-import { JWT } from 'google-auth-library';
 import { formatISTTimeOnly } from './ist-utils';
+import { doc } from './google-sheets';
 
 // Shared bot state across all API endpoints
 interface BotState {
@@ -26,27 +25,7 @@ const defaultBotState: BotState = {
   modeLastChanged: null,
 }
 
-async function getGoogleSheetsDoc() {
-  try {
-    const credentials = JSON.parse(process.env.GSHEET_CREDENTIALS || '{}');
-    const sheetId = process.env.GOOGLE_SHEET_ID || '1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo';
-    
-    const serviceAccountAuth = new JWT({
-      email: credentials.client_email,
-      key: credentials.private_key?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-
-    const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
-    await doc.loadInfo();
-    return doc;
-  } catch (error) {
-    console.error('❌ Failed to connect to Google Sheets:', error);
-    throw error;
-  }
-}
-
-async function getBotControlSheet(doc: GoogleSpreadsheet) {
+async function getBotControlSheet() {
   try {
     // Try to get existing Bot_Control sheet
     let sheet = doc.sheetsByTitle['Bot_Control'];
@@ -79,8 +58,8 @@ async function getBotControlSheet(doc: GoogleSpreadsheet) {
 
 export async function getBotState(): Promise<BotState> {
   try {
-    const doc = await getGoogleSheetsDoc();
-    const sheet = await getBotControlSheet(doc);
+    await doc.loadInfo();
+    const sheet = await getBotControlSheet();
     const rows = await sheet.getRows();
     
     const state: BotState = { ...defaultBotState };
@@ -127,8 +106,8 @@ export async function getBotState(): Promise<BotState> {
 
 export async function updateBotState(updates: Partial<BotState>): Promise<BotState> {
   try {
-    const doc = await getGoogleSheetsDoc();
-    const sheet = await getBotControlSheet(doc);
+    await doc.loadInfo();
+    const sheet = await getBotControlSheet();
     const rows = await sheet.getRows();
     
     // For batch updates, it's more efficient to work with cells
