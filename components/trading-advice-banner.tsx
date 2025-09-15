@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Minus, RefreshCw } from "lucide-react"
 
@@ -33,8 +34,12 @@ export function TradingAdviceBanner() {
           });
         }
       } catch (error) {
-        console.error('Error fetching advice:', error)
+        const errorMessage = (error as Error).message;
+        console.error('Error fetching advice:', errorMessage)
         setTradingAdvice('Unable to fetch trading advice')
+        toast.error("Unable to fetch trading advice", {
+          description: errorMessage,
+        });
       } finally {
         setIsLoading(false)
       }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RefreshCw, TrendingUp, AlertCircle, Filter } from "lucide-react"
@@ -63,6 +64,9 @@ export function EnhancedSignalsDashboard() {
         return
       } else if (signalsData.error) {
         console.error('❌ Error from generate-signals API:', signalsData.error);
+        toast.error("Failed to generate signals", {
+          description: signalsData.error,
+        });
       }
 
       // If no signals from either source
@@ -72,6 +76,9 @@ export function EnhancedSignalsDashboard() {
       
     } catch (error) {
       console.error('❌ Error fetching enhanced signals:', error)
+      toast.error("Error fetching enhanced signals", {
+        description: (error as Error).message,
+      });
       setSignals([])
     } finally {
       setIsLoading(false)

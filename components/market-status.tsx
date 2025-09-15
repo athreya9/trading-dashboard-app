@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 
@@ -31,6 +32,9 @@ export function MarketStatus() {
         }
       } catch (error) {
         console.error('Error fetching market status:', error)
+        toast.error("Could not fetch market status", {
+          description: (error as Error).message,
+        });
       }
     }
 

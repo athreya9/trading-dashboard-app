@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -64,6 +65,9 @@ export function DailyTopTrades() {
             })
         } else if (signalsData.error) {
           console.error("[v0] Error from generate-signals API:", signalsData.error);
+          toast.error("Could not fetch top trades", {
+            description: signalsData.error,
+          });
         } 
 
         console.log("[v0] Filtered high confidence trades:", highConfidenceTrades.length)
@@ -72,6 +76,9 @@ export function DailyTopTrades() {
         console.log("[v0] Top trades data loaded successfully")
       } catch (error) {
         console.error("[v0] Error in fetchTopTrades:", error)
+        toast.error("Error loading top trades", {
+          description: (error as Error).message,
+        });
       } finally {
         setIsLoading(false)
       }
