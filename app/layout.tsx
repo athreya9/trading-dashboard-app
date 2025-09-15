@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/react"
 import { Suspense } from "react"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="font-sans">
+        <Toaster />
         <Suspense fallback={null}>{children}</Suspense>
         <Analytics />
       </body>

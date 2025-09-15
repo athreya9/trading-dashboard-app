@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp } from "lucide-react"
@@ -37,9 +38,11 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
         return chartData;
       } else {
         console.error("[v0] No real price data available from API:", priceData.error);
+        toast.error("Could not load chart data", { description: priceData.error || "The API did not return any data." });
       }
     } catch (error) {
       console.error("[v0] Error fetching chart data:", error)
+      toast.error("Error fetching chart data", { description: (error as Error).message });
     }
     
     return []
@@ -123,7 +126,7 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
     }
   }
 
-  const loadChartData = async () => {
+  const loadChartData = async (isManualRefresh = false) => {
     console.log("[v0] loadChartData called")
     setIsLoading(true)
 
@@ -131,6 +134,9 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
       const data = await fetchRealChartData()
       console.log("[v0] Fetched real chart data, length:", data.length)
       setChartData(data)
+      if (isManualRefresh) {
+        toast.success("Chart data refreshed successfully.")
+      }
     } catch (error) {
       console.error("[v0] Error loading chart data:", error)
       setChartData([]) // Set empty array on error
@@ -158,7 +164,7 @@ export function TradingChart({ symbol = "RELIANCE" }: TradingChartProps) {
           <TrendingUp className="h-5 w-5 text-blue-500" />
           {symbol} - Price Chart
         </CardTitle>
-        <Button onClick={loadChartData} disabled={isLoading} size="sm" variant="outline">
+        <Button onClick={() => loadChartData(true)} disabled={isLoading} size="sm" variant="outline">
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           {isLoading ? "Loading..." : "Refresh"}
         </Button>

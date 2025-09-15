@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -53,11 +54,16 @@ export function ModeSwitch() {
       if (result.success) {
         setMode(newMode)
         setLastChanged(new Date().toLocaleTimeString())
+        toast.success(`System mode switched to ${newMode.toUpperCase()}`, {
+          description: `The bot is now operating in ${newMode} mode.`,
+        })
       } else {
         console.error('Failed to switch mode:', result.error)
+        toast.error("Failed to switch mode", { description: result.error })
       }
     } catch (error) {
       console.error('Error switching mode:', error)
+      toast.error("Error switching mode", { description: (error as Error).message })
     } finally {
       setIsLoading(false)
     }

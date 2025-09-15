@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, TrendingDown, Target, Activity } from "lucide-react"
@@ -69,20 +70,33 @@ export default function NiftyQuantumPlatform() {
         setNiftyData(niftyResult.data)
         console.log('✅ Real NIFTY data loaded:', niftyResult.data)
       } else {
-        // If fetching fails, the component will show 0s, which is better than fake data.
         console.error('❌ Failed to fetch real NIFTY data:', niftyResult.error)
+        toast.error("Failed to fetch NIFTY data", {
+          description: niftyResult.error || "The server could not be reached.",
+        })
       }
 
       // Also check Google Sheets for any updates
       const advisorResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const advisorResult = await advisorResponse.json()
-      if (Array.isArray(advisorResult)) {
-        setAdvisorData(advisorResult)
-        console.log('📊 Google Sheets Advisor_Output:', advisorResult)
+      if (advisorResponse.ok) {
+        const advisorResult = await advisorResponse.json()
+        if (Array.isArray(advisorResult)) {
+          setAdvisorData(advisorResult)
+          console.log('📊 Google Sheets Advisor_Output:', advisorResult)
+        }
+      } else {
+        console.error('❌ Failed to fetch Google Sheets data:', advisorResponse.status, advisorResponse.statusText)
+        toast.warning("Could not fetch advisor data from Google Sheets.", {
+          description: `Status: ${advisorResponse.status} ${advisorResponse.statusText}`,
+        })
       }
+
       console.log("[v0] Data refresh completed successfully")
     } catch (error) {
       console.error("[v0] Error in refreshData:", error)
+      toast.error("An unexpected error occurred while refreshing data.", {
+        description: (error as Error).message,
+      })
     } finally {
       setIsRefreshing(false)
     }
