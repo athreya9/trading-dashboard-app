@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Clock, Target, AlertCircle, CheckCircle, RefreshCw } from "lucide-react"
 
 interface TradingSignal {
@@ -98,6 +99,54 @@ export function PersonalTradingAdvisor() {
     const interval = setInterval(fetchTradingData, 30 * 1000) // Update every 30 seconds
     return () => clearInterval(interval)
   }, [])
+
+  if (isLoading) {
+    return (
+      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 text-white shadow-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
+            <Target className="h-6 w-6" />
+            YOUR TRADING ADVISOR - LIVE STATUS
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* System Status Skeleton */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <span className="text-lg font-semibold">🟢 System Status:</span>
+              </div>
+              <Skeleton className="h-5 w-32" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-muted-foreground text-right">
+                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+          </div>
+
+          {/* Trading Signals Table Skeleton */}
+          <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
+            <Skeleton className="h-6 w-3/4 mb-4" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          </div>
+
+          {/* Timeline Skeleton */}
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+            <Skeleton className="h-6 w-48 mb-3" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
-
-// In a real implementation, this would be stored in a database
-let systemMode = {
-  mode: 'emergency' as 'emergency' | 'full',
-  lastChanged: new Date().toLocaleTimeString(),
-  changedBy: 'system'
-};
+import { getBotState, updateBotState } from '@/lib/bot-state';
+import { getISTTimestamp } from '@/lib/ist-utils';
 
 export async function POST(request: Request) {
   try {
     const { mode } = await request.json();
 
-    // Validate mode
     if (!mode || !['emergency', 'full'].includes(mode)) {
       return NextResponse.json({
         success: false,
@@ -19,28 +13,22 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Check if mode is already set
-    if (systemMode.mode === mode) {
+    const currentState = await getBotState();
+
+    if (currentState.mode === mode) {
       return NextResponse.json({
         success: false,
         error: `System is already in ${mode} mode`
       }, { status: 400 });
     }
 
-    // Switch mode
-    const previousMode = systemMode.mode;
-    systemMode.mode = mode;
-    systemMode.lastChanged = new Date().toLocaleTimeString();
-    systemMode.changedBy = 'user';
+    const previousMode = currentState.mode;
+    const updatedState = await updateBotState({ mode, modeLastChanged: getISTTimestamp() });
+    console.log(`🔄 System mode switched from ${previousMode} to ${mode} at ${updatedState.modeLastChanged}`);
 
-    // In a real implementation, you would:
-    // 1. Update trading algorithm parameters
-    // 2. Adjust risk management settings
-    // 3. Enable/disable certain trading strategies
-    // 4. Update position sizing rules
-    // 5. Log the mode change for audit purposes
-
-    console.log(`🔄 System mode switched from ${previousMode} to ${mode} at ${systemMode.lastChanged}`);
+    // In a real implementation, you would trigger other actions based on the mode switch, such as:
+    // - Updating trading algorithm parameters
+    // - Adjusting risk management settings
 
     // Simulate mode-specific configurations
     const modeConfig = {
@@ -61,8 +49,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: `System mode switched to ${mode.toUpperCase()} successfully`,
-      mode: systemMode.mode,
-      lastChanged: systemMode.lastChanged,
+      mode: updatedState.mode,
+      lastChanged: updatedState.modeLastChanged,
       previousMode,
       config: modeConfig[mode]
     });

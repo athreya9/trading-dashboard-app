@@ -10,6 +10,8 @@ interface BotState {
   uptime: string | null
   tradesExecuted: number
   marketHours: boolean
+  mode?: 'emergency' | 'full'
+  modeLastChanged?: string
 }
 
 // Default bot state
@@ -19,7 +21,9 @@ const defaultBotState: BotState = {
   lastStopped: null,
   uptime: null,
   tradesExecuted: 0,
-  marketHours: false
+  marketHours: false,
+  mode: 'emergency',
+  modeLastChanged: null,
 }
 
 async function getGoogleSheetsDoc() {
@@ -61,7 +65,9 @@ async function getBotControlSheet(doc: GoogleSpreadsheet) {
         { parameter: 'lastStopped', value: '' },
         { parameter: 'uptime', value: '' },
         { parameter: 'tradesExecuted', value: '0' },
-        { parameter: 'marketHours', value: 'false' }
+        { parameter: 'marketHours', value: 'false' },
+        { parameter: 'mode', value: 'emergency' },
+        { parameter: 'modeLastChanged', value: '' },
       ]);
     }
     return sheet;
@@ -101,6 +107,12 @@ export async function getBotState(): Promise<BotState> {
           break;
         case 'marketHours':
           state.marketHours = value === 'true';
+          break;
+        case 'mode':
+          state.mode = value === 'full' ? 'full' : 'emergency';
+          break;
+        case 'modeLastChanged':
+          state.modeLastChanged = value || null;
           break;
       }
     }
