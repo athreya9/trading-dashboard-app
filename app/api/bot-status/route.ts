@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getBotState, updateBotState } from '@/lib/bot-state';
 import { formatISTTimeOnly, isMarketHours } from '@/lib/ist-utils';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering, prevent build-time errors
+
 export async function GET() {
   try {
     // Get current bot state from Google Sheets

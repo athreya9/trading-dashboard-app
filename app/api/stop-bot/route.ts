@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getBotState, updateBotState } from '@/lib/bot-state';
 import { formatISTTimeOnly } from '@/lib/ist-utils';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering, prevent build-time errors
+
 export async function POST() {
   console.log('🛑 Stop-bot API called at:', new Date().toISOString());
   

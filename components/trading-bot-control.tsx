@@ -37,11 +37,18 @@ export function TradingBotControl() {
         setBotStatus(result.status)
         console.log('✅ Bot status updated:', result.status)
       } else {
-        console.error('❌ Failed to get bot status:', result.error)
+        console.error('❌ Failed to get bot status:', result.error, result.details)
+        setBotStatus(prev => ({ ...prev, status: 'error' }));
+        toast.error("Could not get bot status", {
+          description: result.details || result.error,
+        });
       }
     } catch (error) {
       console.error('❌ Error checking bot status:', error)
       setBotStatus(prev => ({ ...prev, status: 'error' }))
+      toast.error("Error checking bot status", {
+        description: (error as Error).message,
+      });
     }
   }
 

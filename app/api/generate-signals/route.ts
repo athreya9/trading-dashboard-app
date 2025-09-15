@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getGoogleSheetDoc } from '@/lib/google-sheets';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering, prevent build-time errors
+
 // A simple in-memory cache to avoid hitting the API too often.
 const cache = {
   data: null as any[] | null,
