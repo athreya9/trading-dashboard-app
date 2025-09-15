@@ -1,5 +1,6 @@
 import { formatISTTimeOnly } from './ist-utils';
-import { doc } from './google-sheets';
+import { getGoogleSheetDoc } from './google-sheets';
+import type { GoogleSpreadsheet } from 'google-spreadsheet';
 
 // Shared bot state across all API endpoints
 interface BotState {
@@ -25,8 +26,9 @@ const defaultBotState: BotState = {
   modeLastChanged: null,
 }
 
-async function getBotControlSheet() {
+async function getBotControlSheet(doc: GoogleSpreadsheet) {
   try {
+    await doc.loadInfo(); // Authenticate and load sheet info
     // Try to get existing Bot_Control sheet
     let sheet = doc.sheetsByTitle['Bot_Control'];
     if (!sheet) {
@@ -58,8 +60,8 @@ async function getBotControlSheet() {
 
 export async function getBotState(): Promise<BotState> {
   try {
-    await doc.loadInfo();
-    const sheet = await getBotControlSheet();
+    const doc = getGoogleSheetDoc();
+    const sheet = await getBotControlSheet(doc);
     const rows = await sheet.getRows();
     
     const state: BotState = { ...defaultBotState };
@@ -106,8 +108,8 @@ export async function getBotState(): Promise<BotState> {
 
 export async function updateBotState(updates: Partial<BotState>): Promise<BotState> {
   try {
-    await doc.loadInfo();
-    const sheet = await getBotControlSheet();
+    const doc = getGoogleSheetDoc();
+    const sheet = await getBotControlSheet(doc);
     const rows = await sheet.getRows();
     
     // For batch updates, it's more efficient to work with cells

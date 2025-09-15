@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { doc } from '@/lib/google-sheets';
+import { getGoogleSheetDoc } from '@/lib/google-sheets';
 
 export async function GET() {
   try {
-    await doc.loadInfo();
+    const doc = getGoogleSheetDoc();
+    await doc.loadInfo(); // Authenticate and load sheet info
     const sheet = doc.sheetsByTitle['Price_Data'];
     if (!sheet) {
       throw new Error("'Price_Data' sheet not found in the document.");
