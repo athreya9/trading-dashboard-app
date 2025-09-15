@@ -1,300 +1,74 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Clock, Target, AlertCircle, CheckCircle, RefreshCw } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 
-interface TradingSignal {
-  Date: string
-  Stock: string
-  Action: "BUY" | "SELL" | "HOLD"
-  Price: number
-  Target?: number
-  StopLoss?: number
-  Confidence?: number
+                      <td className="p-3 text-right text-green-400">
+// Define the structure of a single advisor data entry from your Google Sheet
+interface AdvisorEntry {
+  Timestamp: string;
+  Signal: 'BUY' | 'SELL' | 'HOLD';
+  Symbol: string;
+  'Entry Price': string; // The sheet has a space in the name
+  Target: string;
+  'Stop Loss': string; // The sheet has a space in the name
+  Rationale: string;
 }
 
-interface AdvisorData {
-  systemStatus: "operational" | "warning" | "error"
-  marketMood: "BULLISH" | "BEARISH" | "NEUTRAL"
-  signals: TradingSignal[]
-  timeline: {
-    signalGenerated: string
-    nextCheck: string
-  }
+interface PersonalTradingAdvisorProps {
+  advisorData: AdvisorEntry[];
 }
 
-export function PersonalTradingAdvisor() {
-  const [advisorData, setAdvisorData] = useState<AdvisorData>({
-    systemStatus: "operational",
-    marketMood: "NEUTRAL",
-    signals: [],
-    timeline: {
-      signalGenerated: "Loading...",
-      nextCheck: "Loading...",
-    },
-  })
-  const [isLoading, setIsLoading] = useState(true)
-
-  const fetchTradingData = async () => {
-    setIsLoading(true)
-    try {
-      const signalsResponse = await fetch('/api/generate-signals')
-      const signalsData = await signalsResponse.json()
-      
-      console.log('✅ Fetched signals from API:', signalsData)
-
-      if (signalsData.success && signalsData.signals) {
-        const signals: TradingSignal[] = signalsData.signals.map((signal: any) => ({
-          Date: signal.Date, // Use the pre-formatted date from the API
-          Stock: signal.Stock,
-          Action: signal.Action as "BUY" | "SELL" | "HOLD",
-          Price: signal.Price,
-          Target: signal.Target,
-          StopLoss: signal.StopLoss,
-          Confidence: signal.Confidence,
-        }))
-
-        const buySignals = signals.filter(s => s.Action === 'BUY').length
-        const sellSignals = signals.filter(s => s.Action === 'SELL').length
-        const marketMood = buySignals > sellSignals ? 'BULLISH' : sellSignals > buySignals ? 'BEARISH' : 'NEUTRAL'
-
-        setAdvisorData({
-          signals: signals,
-          marketMood: marketMood as "BULLISH" | "BEARISH" | "NEUTRAL",
-          systemStatus: "operational",
-          timeline: {
-            signalGenerated: signalsData.lastUpdate || new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 30 * 1000).toLocaleTimeString(),
-          },
-        })
-      } else {
-        setAdvisorData(prev => ({
-          ...prev,
-          systemStatus: "warning",
-          signals: [],
-          timeline: {
-            signalGenerated: signalsData.lastUpdate || new Date().toLocaleTimeString(),
-            nextCheck: new Date(Date.now() + 30 * 1000).toLocaleTimeString(),
-          },
-        }))
-        console.error('Failed to fetch signals:', signalsData.error);
-      }
-    } catch (error) {
-      console.error('Error fetching trading data:', error)
-      setAdvisorData(prev => ({
-        ...prev,
-        systemStatus: "error",
-      }))
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchTradingData()
-    const interval = setInterval(fetchTradingData, 30 * 1000) // Update every 30 seconds
-    return () => clearInterval(interval)
-  }, [])
-
-  if (isLoading) {
-    return (
-      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 text-white shadow-2xl">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
-            <Target className="h-6 w-6" />
-            YOUR TRADING ADVISOR - LIVE STATUS
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* System Status Skeleton */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <span className="text-lg font-semibold">🟢 System Status:</span>
-              </div>
-              <Skeleton className="h-5 w-32" />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-muted-foreground text-right">
-                <Skeleton className="h-4 w-20 mb-1" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <Skeleton className="h-9 w-24" />
-            </div>
-          </div>
-
-          {/* Trading Signals Table Skeleton */}
-          <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
-            <Skeleton className="h-6 w-3/4 mb-4" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          </div>
-
-          {/* Timeline Skeleton */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
-            <Skeleton className="h-6 w-48 mb-3" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "operational":
-        return "text-green-500"
-      case "warning":
-        return "text-yellow-500"
-      case "error":
-        return "text-red-500"
+export function PersonalTradingAdvisor({ advisorData }: PersonalTradingAdvisorProps) {
+  const getSignalClass = (signal: AdvisorEntry['Signal']) => {
+    switch (signal) {
+      case 'BUY':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'SELL':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return "text-gray-500"
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     }
-  }
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case "BUY":
-        return "bg-green-500 text-white"
-      case "SELL":
-        return "bg-red-500 text-white"
-      case "HOLD":
-        return "bg-yellow-500 text-white"
-      default:
-        return "bg-gray-500 text-white"
-    }
-  }
-
-  const getRowColor = (action: string) => {
-    switch (action) {
-      case "BUY":
-        return "bg-green-100/10 dark:bg-green-900/30 border-l-4 border-l-green-500"
-      case "SELL":
-        return "bg-red-100/10 dark:bg-red-900/30 border-l-4 border-l-red-500"
-      case "HOLD":
-        return "bg-yellow-100/10 dark:bg-yellow-900/30 border-l-4 border-l-yellow-500"
-      default:
-        return "bg-gray-100/10 dark:bg-gray-900/30 border-l-4 border-l-gray-500"
-    }
-  }
+  };
 
   return (
-    <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 text-white shadow-2xl">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-yellow-400 flex items-center justify-center gap-2">
-          <Target className="h-6 w-6" />
-          YOUR TRADING ADVISOR - LIVE STATUS
-        </CardTitle>
+        <CardTitle>Personal Trading Advisor</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* System Status */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {advisorData.systemStatus === "operational" ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              )}
-              <span className="text-lg font-semibold">🟢 System Status:</span>
-            </div>
-            <span className={getStatusColor(advisorData.systemStatus)}>
-              All systems operational.
-            </span>
+      <CardContent>
+        {advisorData && advisorData.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Signal</TableHead>
+                <TableHead>Symbol</TableHead>
+                <TableHead className="text-right">Entry Price</TableHead>
+                <TableHead className="text-right">Target</TableHead>
+                <TableHead className="text-right">Stop Loss</TableHead>
+                <TableHead>Rationale</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {advisorData.map((entry, index) => (
+                <TableRow key={index}>
+                  <TableCell><Badge variant="outline" className={getSignalClass(entry.Signal)}>{entry.Signal}</Badge></TableCell>
+                  <TableCell className="font-medium">{entry.Symbol}</TableCell>
+                  <TableCell className="text-right">{entry['Entry Price']}</TableCell>
+                  <TableCell className="text-right text-green-400">{entry.Target}</TableCell>
+                  <TableCell className="text-right text-red-400">{entry['Stop Loss']}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{entry.Rationale}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+            <AlertCircle className="w-10 h-10 mb-4" />
+            <p className="font-semibold">No trading advice available at the moment.</p>
+            <p className="text-sm">The advisor will provide signals when market conditions are met.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-xs text-muted-foreground text-right">
-              <div>Last Refreshed:</div>
-              <div className="font-mono">{advisorData.timeline.signalGenerated}</div>
-            </div>
-            <Button onClick={fetchTradingData} disabled={isLoading} size="sm">
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : "mr-2"}`} />
-              {isLoading ? "Loading..." : "Refresh"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Trading Signals Table */}
-        <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-600">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            💡 LIVE TRADING SIGNALS FROM ADVISOR_OUTPUT:
-          </h3>
-
-          {advisorData.signals.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              {isLoading ? "Loading trading signals..." : "No trading signals available. Click refresh to load data."}
-            </div>
-          ) : (
-            <div className="max-h-96 overflow-y-auto border rounded-lg">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-700 sticky top-0">
-                  <tr>
-                    <th className="p-3 text-left text-yellow-400">Date</th>
-                    <th className="p-3 text-left text-yellow-400">Stock</th>
-                    <th className="p-3 text-center text-yellow-400">Action</th>
-                    <th className="p-3 text-right text-yellow-400">Price</th>
-                    <th className="p-3 text-right text-yellow-400">Target</th>
-                    <th className="p-3 text-right text-yellow-400">Stop Loss</th>
-                    <th className="p-3 text-right text-yellow-400">Confidence</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {advisorData.signals.map((signal, index) => (
-                    <tr
-                      key={index}
-                      className={`border-b border-slate-600 hover:bg-slate-700/50 transition-colors ${getRowColor(signal.Action)}`}
-                    >
-                      <td className="p-3 text-white font-mono text-xs">{signal.Date}</td>
-                      <td className="p-3 font-bold text-white">{signal.Stock}</td>
-                      <td className="p-3 text-center">
-                        <Badge className={`${getActionColor(signal.Action)} font-bold px-3 py-1 text-sm`}>
-                          {signal.Action === "BUY" ? "🟢 BUY" : signal.Action === "SELL" ? "🔴 SELL" : "🟡 HOLD"}
-                        </Badge>
-                      </td>
-                      <td className="p-3 text-right text-white">₹{signal.Price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="p-3 text-right text-green-400">
-                        {signal.Target ? `₹${signal.Target.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
-                      </td>
-                      <td className="p-3 text-right text-red-400">
-                        {signal.StopLoss ? `₹${signal.StopLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
-                      </td>
-                      <td className="p-3 text-right text-white">
-                        {signal.Confidence ? `${signal.Confidence.toFixed(0)}%` : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Timeline */}
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
-          <h3 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-            <Clock className="h-5 w-5" />⏰ TIMELINE:
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Last Updated:</span>
-              <span className="text-white font-mono">{advisorData.timeline.signalGenerated}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Next Update:</span>
-              <span className="text-white font-mono">{advisorData.timeline.nextCheck}</span>
-            </div>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )

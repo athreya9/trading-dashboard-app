@@ -35,6 +35,7 @@ export default function NiftyQuantumPlatform() {
     previousClose: 0,
   })
 
+  const [advisorData, setAdvisorData] = useState<any[]>([])
   // Removed fake data state - only keeping real Nifty data from Google Sheets
 
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -74,9 +75,11 @@ export default function NiftyQuantumPlatform() {
 
       // Also check Google Sheets for any updates
       const advisorResponse = await fetch('https://opensheet.elk.sh/1JzYvOCgSfI5rBMD0ilDWhS0zzZv0cGxoV0rWa9WfVGo/Advisor_Output')
-      const advisorData = await advisorResponse.json()
-      console.log('📊 Google Sheets Advisor_Output:', advisorData)
-
+      const advisorResult = await advisorResponse.json()
+      if (Array.isArray(advisorResult)) {
+        setAdvisorData(advisorResult)
+        console.log('📊 Google Sheets Advisor_Output:', advisorResult)
+      }
       console.log("[v0] Data refresh completed successfully")
     } catch (error) {
       console.error("[v0] Error in refreshData:", error)
@@ -159,7 +162,7 @@ export default function NiftyQuantumPlatform() {
 
         <EnhancedSignalsDashboard />
 
-        <PersonalTradingAdvisor />
+        <PersonalTradingAdvisor advisorData={advisorData} />
 
         <DailyTopTrades />
 
