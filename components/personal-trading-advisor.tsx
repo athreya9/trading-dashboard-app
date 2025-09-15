@@ -2,8 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
-
-                      <td className="p-3 text-right text-green-400">
 // Define the structure of a single advisor data entry from your Google Sheet
 interface AdvisorEntry {
   Timestamp: string;
