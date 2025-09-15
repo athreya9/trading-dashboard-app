@@ -101,8 +101,8 @@ export async function getBotState(): Promise<BotState> {
     console.log('✅ Bot state loaded from Google Sheets:', state);
     return state;
   } catch (error) {
-    console.error('❌ Failed to get bot state, using default:', error);
-    return { ...defaultBotState };
+    console.error('❌ Failed to get bot state from Google Sheets:', error);
+    throw new Error(`Failed to retrieve bot state: ${(error as Error).message}`);
   }
 }
 
