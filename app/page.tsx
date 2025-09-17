@@ -29,83 +29,33 @@ interface NiftyData {
 export default function NiftyQuantumPlatform() {
   console.log("[v0] NiftyQuantumPlatform component initializing")
 
-  const [niftyData, setNiftyData] = useState<NiftyData>({
-    currentPrice: 0,
-    todaysHigh: 0,
-    todaysLow: 0,
-    openingPrice: 0,
-    previousClose: 0,
-  })
-
-  const [advisorData, setAdvisorData] = useState<any[]>([])
-  // Removed fake data state - only keeping real Nifty data from Google Sheets
-
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isLoading, setIsLoading] = useState(true);
+  const [niftyData, setNiftyData] = useState<NiftyData>({ currentPrice: 0, todaysHigh: 0, todaysLow: 0, openingPrice: 0, previousClose: 0 });
+  const [advisorData, setAdvisorData] = useState<any[]>([]);
 
   useEffect(() => {
-    console.log("[v0] Setting up auto-refresh interval")
-    // Initial data fetch
-    refreshData()
-    
-    const interval = setInterval(() => {
-      console.log("[v0] Auto-refresh triggered")
-      refreshData()
-    }, 30000) // Auto-refresh every 30 seconds (reduced from 5 seconds to save API calls)
+    const refreshData = async () => {
+      try {
+        const niftyResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/nifty-data');
+        const niftyResult = await niftyResponse.json();
+        if (niftyResult.success && niftyResult.data) {
+          setNiftyData(niftyResult.data);
+        }
 
-    return () => {
-      console.log("[v0] Cleaning up auto-refresh interval")
-      clearInterval(interval)
-    }
-  }, [])
-
-  const refreshData = async () => {
-    console.log("[v0] refreshData called")
-    setIsRefreshing(true)
-
-    try {
-      console.log("Fetching NIFTY data from: https://datradingplatform-884404713353.asia-south1.run.app/api/nifty-data");
-      const niftyResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/nifty-data');
-      console.log("NIFTY response status:", niftyResponse.status);
-      const niftyResult = await niftyResponse.json();
-      console.log("NIFTY result:", niftyResult);
-
-      if (niftyResult.success && niftyResult.data) {
-        setNiftyData(niftyResult.data);
-        console.log('✅ Real NIFTY data loaded:', niftyResult.data);
-      } else {
-        console.error('❌ Failed to fetch real NIFTY data:', niftyResult.error);
-        toast.error("Failed to fetch NIFTY data", {
-          description: niftyResult.error || "The server could not be reached.",
-        });
+        const advisorResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output');
+        const advisorResult = await advisorResponse.json();
+        if (Array.isArray(advisorResult)) {
+          setAdvisorData(advisorResult);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
+    };
 
-      console.log("Fetching advisor data from: https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
-      const advisorResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output');
-      console.log("Advisor response status:", advisorResponse.status);
-      const advisorResult = await advisorResponse.json();
-      console.log("Advisor result:", advisorResult);
+    refreshData();
+    const interval = setInterval(refreshData, 30000);
 
-      if (Array.isArray(advisorResult)) {
-        setAdvisorData(advisorResult);
-        console.log('📊 Google Sheets Advisor_Output:', advisorResult);
-      }
-    } catch (error) {
-      console.error("[v0] Error in refreshData:", error);
-      toast.error("An unexpected error occurred while refreshing data.", {
-        description: (error as Error).message,
-      });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }
-
-  console.log("[v0] NiftyQuantumPlatform rendering")
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">

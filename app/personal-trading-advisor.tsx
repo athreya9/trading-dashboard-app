@@ -5,44 +5,26 @@ import { toast } from "sonner"
 import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
 
 export default function PersonalTradingAdvisorPage() {
-  const [advisorData, setAdvisorData] = useState<any[]>([])
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isLoading, setIsLoading] = useState(true);
-
-  const refreshData = async () => {
-    setIsRefreshing(true)
-    try {
-      console.log("Fetching advisor data from: https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
-      const advisorResponse = await fetch("https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
-      console.log("Advisor response status:", advisorResponse.status);
-      const advisorResult = await advisorResponse.json();
-      console.log("Advisor result:", advisorResult);
-
-      if (Array.isArray(advisorResult)) {
-        setAdvisorData(advisorResult);
-        console.log("📊 Google Sheets Advisor_Output:", advisorResult);
-      }
-    } catch (error) {
-      console.error("Error in refreshData:", error);
-      toast.error("An unexpected error occurred while refreshing data.", {
-        description: (error as Error).message,
-      });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }
+  const [advisorData, setAdvisorData] = useState<any[]>([]);
 
   useEffect(() => {
-    refreshData()
-    const interval = setInterval(refreshData, 30000) // Auto-refresh every 30 seconds
+    const refreshData = async () => {
+      try {
+        const advisorResponse = await fetch("https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
+        const advisorResult = await advisorResponse.json();
+        if (Array.isArray(advisorResult)) {
+          setAdvisorData(advisorResult);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-    return () => clearInterval(interval)
-  }, [])
+    refreshData();
+    const interval = setInterval(refreshData, 30000);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
