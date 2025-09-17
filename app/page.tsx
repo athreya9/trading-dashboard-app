@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -121,9 +122,14 @@ export default function NiftyQuantumPlatform() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-                Trading Dashboard
-              </h1>
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+                  Trading Dashboard
+                </h1>
+                <Link href="/personal-trading-advisor">
+                  <Button variant="outline">Personal Trading Advisor</Button>
+                </Link>
+              </div>
               <p className="text-sm md:text-base text-muted-foreground font-medium mb-2">
                 Algorithmic Trading Intelligence Platform
               </p>
