@@ -63,42 +63,37 @@ export default function NiftyQuantumPlatform() {
     setIsRefreshing(true)
 
     try {
-      // Fetch real NIFTY data from our own API endpoint
-      const niftyResponse = await fetch('/api/nifty-data')
-      const niftyResult = await niftyResponse.json()
-      
+      console.log("Fetching NIFTY data from: https://datradingplatform-884404713353.asia-south1.run.app/api/nifty-data");
+      const niftyResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/nifty-data');
+      console.log("NIFTY response status:", niftyResponse.status);
+      const niftyResult = await niftyResponse.json();
+      console.log("NIFTY result:", niftyResult);
+
       if (niftyResult.success && niftyResult.data) {
-        setNiftyData(niftyResult.data)
-        console.log('✅ Real NIFTY data loaded:', niftyResult.data)
+        setNiftyData(niftyResult.data);
+        console.log('✅ Real NIFTY data loaded:', niftyResult.data);
       } else {
-        console.error('❌ Failed to fetch real NIFTY data:', niftyResult.error)
+        console.error('❌ Failed to fetch real NIFTY data:', niftyResult.error);
         toast.error("Failed to fetch NIFTY data", {
           description: niftyResult.error || "The server could not be reached.",
-        })
+        });
       }
 
-      // Also check Google Sheets for any updates
-      const advisorResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output')
-      if (advisorResponse.ok) {
-        const advisorResult = await advisorResponse.json()
-        if (Array.isArray(advisorResult)) {
-          setAdvisorData(advisorResult)
-          console.log('📊 Google Sheets Advisor_Output:', advisorResult)
-        }
-      } else {
-        const errorResult = await advisorResponse.json().catch(() => ({ details: 'Could not parse error response.' }));
-        console.error('❌ Failed to fetch advisor data:', errorResult.error)
-        toast.warning("Could not fetch advisor data.", {
-          description: errorResult.details || `The server responded with status ${advisorResponse.status}.`,
-        })
-      }
+      console.log("Fetching advisor data from: https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
+      const advisorResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output');
+      console.log("Advisor response status:", advisorResponse.status);
+      const advisorResult = await advisorResponse.json();
+      console.log("Advisor result:", advisorResult);
 
-      console.log("[v0] Data refresh completed successfully")
+      if (Array.isArray(advisorResult)) {
+        setAdvisorData(advisorResult);
+        console.log('📊 Google Sheets Advisor_Output:', advisorResult);
+      }
     } catch (error) {
-      console.error("[v0] Error in refreshData:", error)
+      console.error("[v0] Error in refreshData:", error);
       toast.error("An unexpected error occurred while refreshing data.", {
         description: (error as Error).message,
-      })
+      });
     } finally {
       setIsRefreshing(false)
     }

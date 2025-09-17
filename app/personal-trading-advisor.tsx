@@ -11,29 +11,21 @@ export default function PersonalTradingAdvisorPage() {
   const refreshData = async () => {
     setIsRefreshing(true)
     try {
-      const advisorResponse = await fetch("https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output")
-      if (advisorResponse.ok) {
-        const advisorResult = await advisorResponse.json()
-        if (Array.isArray(advisorResult)) {
-          setAdvisorData(advisorResult)
-          console.log("📊 Google Sheets Advisor_Output:", advisorResult)
-        }
-      } else {
-        const errorResult = await advisorResponse
-          .json()
-          .catch(() => ({ details: "Could not parse error response." }))
-        console.error("❌ Failed to fetch advisor data:", errorResult.error)
-        toast.warning("Could not fetch advisor data.", {
-          description:
-            errorResult.details ||
-            `The server responded with status ${advisorResponse.status}.`,
-        })
+      console.log("Fetching advisor data from: https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
+      const advisorResponse = await fetch("https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
+      console.log("Advisor response status:", advisorResponse.status);
+      const advisorResult = await advisorResponse.json();
+      console.log("Advisor result:", advisorResult);
+
+      if (Array.isArray(advisorResult)) {
+        setAdvisorData(advisorResult);
+        console.log("📊 Google Sheets Advisor_Output:", advisorResult);
       }
     } catch (error) {
-      console.error("Error in refreshData:", error)
+      console.error("Error in refreshData:", error);
       toast.error("An unexpected error occurred while refreshing data.", {
         description: (error as Error).message,
-      })
+      });
     } finally {
       setIsRefreshing(false)
     }
