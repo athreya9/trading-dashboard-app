@@ -7,6 +7,7 @@ import { PersonalTradingAdvisor } from "@/components/personal-trading-advisor"
 export default function PersonalTradingAdvisorPage() {
   const [advisorData, setAdvisorData] = useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true);
 
   const refreshData = async () => {
     setIsRefreshing(true)

@@ -41,6 +41,7 @@ export default function NiftyQuantumPlatform() {
   // Removed fake data state - only keeping real Nifty data from Google Sheets
 
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     console.log("[v0] Setting up auto-refresh interval")
