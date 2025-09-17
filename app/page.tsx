@@ -78,7 +78,7 @@ export default function NiftyQuantumPlatform() {
       }
 
       // Also check Google Sheets for any updates
-      const advisorResponse = await fetch('/api/advisor-output')
+      const advisorResponse = await fetch('https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output')
       if (advisorResponse.ok) {
         const advisorResult = await advisorResponse.json()
         if (Array.isArray(advisorResult)) {
