@@ -24,11 +24,7 @@ interface NiftyData {
   previousClose: number
 }
 
-// Removed unused interfaces - will be added back when real data sources are available
-
 export default function NiftyQuantumPlatform() {
-  console.log("[v0] NiftyQuantumPlatform component initializing")
-
   const [niftyData, setNiftyData] = useState<NiftyData>({ currentPrice: 0, todaysHigh: 0, todaysLow: 0, openingPrice: 0, previousClose: 0 });
   const [advisorData, setAdvisorData] = useState<any[]>([]);
 
@@ -113,7 +109,7 @@ export default function NiftyQuantumPlatform() {
             <Card className="bg-card border-border">
               <CardContent className="p-4 text-center">
                 <div className="text-lg font-semibold text-foreground">₹{niftyData.openingPrice.toFixed(2)}</div>
-                <div className="text-xs text-muted-foreground">Opening Price</div>
+                <div className="text-xs text-muted-foreground">Opening Price</div>.
               </CardContent>
             </Card>
 
@@ -140,9 +136,6 @@ export default function NiftyQuantumPlatform() {
 
         <TradingChart symbol="NIFTY 50" />
 
-        {/* Options Chain removed - will be added when real options data is available */}
-
-        {/* Performance Summary removed - will be calculated from real trading data */}
       </div>
     </div>
   )
