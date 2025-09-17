@@ -95,11 +95,16 @@ export default function NiftyQuantumPlatform() {
         description: (error as Error).message,
       });
     } finally {
-      setIsRefreshing(false)
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   }
 
   console.log("[v0] NiftyQuantumPlatform rendering")
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">

@@ -27,7 +27,8 @@ export default function PersonalTradingAdvisorPage() {
         description: (error as Error).message,
       });
     } finally {
-      setIsRefreshing(false)
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   }
 
@@ -37,6 +38,10 @@ export default function PersonalTradingAdvisorPage() {
 
     return () => clearInterval(interval)
   }, [])
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4">
