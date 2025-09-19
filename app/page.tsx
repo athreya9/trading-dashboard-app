@@ -86,10 +86,10 @@ export default function NiftyQuantumPlatform() {
   }
 
   // Extract data for display
-  const niftyData = dashboardData.priceData.length > 0 ? dashboardData.priceData[0] : null;
-  const advisorOutput = dashboardData.advisorOutput;
-  const botControl = dashboardData.botControl;
-  const signals = dashboardData.signals;
+  const niftyData = dashboardData && dashboardData.priceData && dashboardData.priceData.length > 0 ? dashboardData.priceData[0] : null;
+  const advisorOutput = dashboardData && dashboardData.advisorOutput ? dashboardData.advisorOutput : [];
+  const botControl = dashboardData && dashboardData.botControl ? dashboardData.botControl : [];
+  const signals = dashboardData && dashboardData.signals ? dashboardData.signals : [];
 
   // Find specific bot control values
   const getBotControlValue = (param: string) => {
