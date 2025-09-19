@@ -60,6 +60,7 @@ export default function NiftyQuantumPlatform() {
           };
 
           setDashboardData(newDashboardData);
+          console.log("Dashboard data:", newDashboardData);
           toast.success("Data refreshed successfully!");
 
         } catch (error) {
