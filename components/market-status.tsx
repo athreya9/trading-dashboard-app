@@ -1,47 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 
-export function MarketStatus() {
-  const [marketMood, setMarketMood] = useState('NEUTRAL')
-  const [totalSignals, setTotalSignals] = useState(0)
-  const [lastUpdate, setLastUpdate] = useState('')
+interface MarketStatusProps {
+  botControl: any[]; // Expecting botControl data from dashboard API
+}
 
-  useEffect(() => {
-    const fetchMarketStatus = async () => {
-      try {
-        // Fetch signals from our secure API
-        const response = await fetch('/api/generate-signals')
-        const signalsData = await response.json()
-        
-        if (signalsData.success && signalsData.signals.length > 0) {
-          // Calculate market mood based on generated signals
-          const buySignals = signalsData.signals.filter((s: any) => s.Action === 'BUY').length
-          const sellSignals = signalsData.signals.filter((s: any) => s.Action === 'SELL').length
-          
-          let mood = 'NEUTRAL'
-          if (buySignals > sellSignals) mood = 'BULLISH'
-          else if (sellSignals > buySignals) mood = 'BEARISH'
-          
-          setMarketMood(mood)
-          setTotalSignals(signalsData.signals.length)
-          setLastUpdate(new Date().toLocaleTimeString())
-        }
-      } catch (error) {
-        console.error('Error fetching market status:', error)
-        toast.error("Could not fetch market status", {
-          description: (error as Error).message,
-        });
-      }
-    }
+export function MarketStatus({ botControl }: MarketStatusProps) {
+  // Extract values from botControl prop
+  const getBotControlValue = (param: string) => {
+    const control = botControl.find(item => item.Parameter === param);
+    return control ? control.Value : 'N/A';
+  };
 
-    fetchMarketStatus()
-    const interval = setInterval(fetchMarketStatus, 60000) // Update every minute with REAL data
-    return () => clearInterval(interval)
-  }, [])
+  const marketMood = getBotControlValue('marketMood'); // Assuming 'marketMood' is a parameter in botControl
+  const totalSignals = getBotControlValue('totalSignals'); // Assuming 'totalSignals' is a parameter in botControl
+  const lastUpdate = getBotControlValue('last_updated'); // Assuming 'last_updated' is a parameter in botControl
 
   const getMoodIcon = () => {
     switch (marketMood) {

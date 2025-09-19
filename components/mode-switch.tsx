@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,47 +13,39 @@ interface SystemMode {
   features: string[]
 }
 
-export function ModeSwitch() {
-  const [mode, setMode] = useState<'emergency' | 'full'>('emergency')
-  const [isLoading, setIsLoading] = useState(false)
-  const [lastChanged, setLastChanged] = useState<string>('')
+interface ModeSwitchProps {
+  botControl: any[]; // Expecting botControl data from dashboard API
+}
 
-  useEffect(() => {
-    // Get current mode on component mount
-    fetchCurrentMode()
-  }, [])
+export function ModeSwitch({ botControl }: ModeSwitchProps) {
+  const [isLoading, setIsLoading] = useState(false) // Keep isLoading for button state
 
-  const fetchCurrentMode = async () => {
-    try {
-      const response = await fetch('/api/get-mode')
-      const result = await response.json()
-      if (result.success) {
-        setMode(result.mode)
-        setLastChanged(result.lastChanged || '')
-      }
-    } catch (error) {
-      console.error('Error fetching current mode:', error)
-    }
-  }
+  // Extract values from botControl prop
+  const getBotControlValue = (param: string) => {
+    const control = botControl.find(item => item.Parameter === param);
+    return control ? control.Value : 'N/A';
+  };
+
+  const mode = getBotControlValue('mode') as 'emergency' | 'full'; // Assuming 'mode' is a parameter in botControl
+  const lastChanged = getBotControlValue('last_updated'); // Assuming 'last_updated' is a parameter in botControl
 
   const switchMode = async (newMode: 'emergency' | 'full') => {
     if (newMode === mode) return // Don't switch if already in that mode
-    
+
     setIsLoading(true)
     try {
       const response = await fetch('/api/switch-mode', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application',
         },
         body: JSON.stringify({ mode: newMode })
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
-        setMode(newMode)
-        setLastChanged(new Date().toLocaleTimeString())
+        // Mode will be updated by parent component's refreshData
         toast.success(`System mode switched to ${newMode.toUpperCase()}`, {
           description: `The bot is now operating in ${newMode} mode.`,
         })
@@ -128,9 +120,9 @@ export function ModeSwitch() {
               )}
             </Badge>
           </div>
-          
+
           <p className="text-gray-300 mb-3">{currentConfig.description}</p>
-          
+
           <div className="space-y-1">
             <h4 className="text-sm font-semibold text-white">Active Features:</h4>
             {currentConfig.features.map((feature, index) => (
@@ -140,7 +132,7 @@ export function ModeSwitch() {
               </div>
             ))}
           </div>
-          
+
           {lastChanged && (
             <div className="mt-3 text-xs text-gray-500">
               Last changed: {lastChanged}
@@ -155,8 +147,8 @@ export function ModeSwitch() {
             onClick={() => switchMode('emergency')}
             disabled={isLoading || mode === 'emergency'}
             className={`h-auto p-4 flex flex-col items-start gap-2 transition-all ${
-              mode === 'emergency' 
-                ? 'bg-yellow-600 hover:bg-yellow-700 border-2 border-yellow-400' 
+              mode === 'emergency'
+                ? 'bg-yellow-600 hover:bg-yellow-700 border-2 border-yellow-400'
                 : 'bg-yellow-700 hover:bg-yellow-600 border border-yellow-600'
             }`}
           >
@@ -179,8 +171,8 @@ export function ModeSwitch() {
             onClick={() => switchMode('full')}
             disabled={isLoading || mode === 'full'}
             className={`h-auto p-4 flex flex-col items-start gap-2 transition-all ${
-              mode === 'full' 
-                ? 'bg-green-600 hover:bg-green-700 border-2 border-green-400' 
+              mode === 'full'
+                ? 'bg-green-600 hover:bg-green-700 border-2 border-green-400'
                 : 'bg-green-700 hover:bg-green-600 border border-green-600'
             }`}
           >
