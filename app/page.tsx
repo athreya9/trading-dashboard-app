@@ -119,7 +119,7 @@ export default function NiftyQuantumPlatform() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-      <h1>Test Change</h1>
+      
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex items-center gap-4">
