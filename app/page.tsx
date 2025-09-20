@@ -29,39 +29,25 @@ interface DashboardData {
 
 export default function NiftyQuantumPlatform() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [niftyData, setNiftyData] = useState<NiftyData | null>(null); // Initialize as null
 
-  useEffect(() => {
-    const refreshData = async () => {
-      if (typeof window !== 'undefined') { // Ensure this runs only in the browser
-        try {
-          const advisorOutputCol = collection(db, 'advisor_output');
-          const signalsCol = collection(db, 'signals');
-          const priceDataCol = collection(db, 'price_data');
-          const tradeLogCol = collection(db, 'trade_log');
-
-          const advisorOutputSnapshot = await getDocs(advisorOutputCol);
-          const signalsSnapshot = await getDocs(signalsCol);
-          const priceDataQuery = query(priceDataCol, orderBy("timestamp", "desc"), limit(1));
-          const priceDataSnapshot = await getDocs(priceDataQuery);
-          const tradeLogSnapshot = await getDocs(tradeLogCol);
-
-          const advisorOutput = advisorOutputSnapshot.docs.map(doc => doc.data());
-          const signals = signalsSnapshot.docs.map(doc => doc.data());
-          const priceData = priceDataSnapshot.docs.map(doc => doc.data());
-          const tradeLog = tradeLogSnapshot.docs.map(doc => doc.data());
-
-          const newDashboardData = {
-            advisorOutput,
-            signals,
-            priceData,
-            tradeLog,
-            botControl: [], // Add dummy bot control data for now
-            lastRefreshed: new Date().toISOString(),
-          };
-
-          setDashboardData(newDashboardData);
+  setDashboardData(newDashboardData);
           console.log("Dashboard data:", newDashboardData);
           toast.success("Data refreshed successfully!");
+
+          // Update niftyData state separately
+          if (priceData.length > 0) {
+            const latestNiftyData = priceData[0];
+            setNiftyData({
+              currentPrice: latestNiftyData.close,
+              todaysHigh: latestNiftyData.high,
+              todaysLow: latestNiftyData.low,
+              openingPrice: latestNiftyData.open,
+              previousClose: latestNiftyData.close, // This might not be correct, depends on the data
+            });
+          } else {
+            setNiftyData(null); // Reset if no data
+          }
 
         } catch (error) {
           console.error("Error fetching dashboard data:", error);
@@ -86,7 +72,6 @@ export default function NiftyQuantumPlatform() {
   }
 
   // Extract data for display
-  const niftyData = dashboardData && dashboardData.priceData && dashboardData.priceData.length > 0 ? dashboardData.priceData[0] : null;
   const advisorOutput = dashboardData && dashboardData.advisorOutput ? dashboardData.advisorOutput : [];
   const botControl = dashboardData && dashboardData.botControl ? dashboardData.botControl : [];
   const signals = dashboardData && dashboardData.signals ? dashboardData.signals : [];
@@ -133,43 +118,44 @@ export default function NiftyQuantumPlatform() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-500">₹{niftyData ? niftyData.close.toFixed(2) : '0.00'}</div>
-                <div className="text-xs text-muted-foreground">Current Price</div>
-              </CardContent>
-            </Card>
+          {niftyData && ( // Conditional rendering for Nifty data cards
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-500">₹{niftyData.currentPrice.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Current Price</div>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center">
-                <div className="text-lg font-semibold text-foreground">₹{niftyData ? niftyData.high.toFixed(2) : '0.00'}</div>
-                <div className="text-xs text-muted-foreground">Today's High</div>
-              </CardContent>
-            </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">₹{niftyData.todaysHigh.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Today's High</div>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center">
-                <div className="text-lg font-semibold text-foreground">₹{niftyData ? niftyData.low.toFixed(2) : '0.00'}</div>
-                <div className="text-xs text-muted-foreground">Today's Low</div>
-              </CardContent>
-            </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">₹{niftyData.todaysLow.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Today's Low</div>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center">
-                <div className="text-lg font-semibold text-foreground">₹{niftyData ? niftyData.open.toFixed(2) : '0.00'}</div>
-                <div className="text-xs text-muted-foreground">Opening Price</div>.
-              </CardContent>
-            </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">₹{niftyData.openingPrice.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Opening Price</div>.
+                </CardContent>
+              </Card>
 
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 text-center">
-                <div className="text-lg font-semibold text-foreground">₹{niftyData ? niftyData.previousClose.toFixed(2) : '0.00'}</div>
-                <div className="text-xs text-muted-foreground">Previous Close</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">₹{niftyData.previousClose.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Previous Close</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
         <TradingAdviceBanner /> {/* This component needs to be updated to use advisorOutput */}
 
