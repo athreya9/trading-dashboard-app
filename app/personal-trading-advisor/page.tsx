@@ -13,7 +13,7 @@ export default function PersonalTradingAdvisorPage() {
     const refreshData = async () => {
       if (typeof window !== 'undefined') { // Ensure this runs only in the browser
         try {
-          const advisorResponse = await fetch("https://datradingplatform-884404713353.asia-south1.run.app/api/advisor-output");
+          const advisorResponse = await fetch("https://trading-backend-390383470275.asia-south1.run.app/api/dashboard");
           const advisorResult = await advisorResponse.json();
           if (Array.isArray(advisorResult)) {
             setAdvisorData(advisorResult);
