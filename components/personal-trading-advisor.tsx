@@ -2,15 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
-// Define the structure of a single advisor data entry from your Google Sheet
+
+// Define the structure of a single advisor data entry from Firestore
 interface AdvisorEntry {
-  Timestamp: string;
-  Signal: 'BUY' | 'SELL' | 'HOLD';
-  Symbol: string;
-  'Entry Price': string; // The sheet has a space in the name
-  Target: string;
-  'Stop Loss': string; // The sheet has a space in the name
-  Rationale: string;
+  recommendation: string; // e.g., "BUY NIFTY (CALL)"
+  confidence: string;    // e.g., "85%"
+  entry_price: number;
+  stop_loss: number;
+  take_profit: number;
+  reasons: string;
+  timestamp: string;
 }
 
 interface PersonalTradingAdvisorProps {
@@ -18,15 +19,20 @@ interface PersonalTradingAdvisorProps {
 }
 
 export function PersonalTradingAdvisor({ advisorData }: PersonalTradingAdvisorProps) {
-  const getSignalClass = (signal: AdvisorEntry['Signal']) => {
-    switch (signal) {
-      case 'BUY':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'SELL':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default:
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+  const getSignalClass = (recommendation: string) => {
+    if (recommendation.includes('BUY')) {
+      return 'bg-green-500/20 text-green-400 border-green-500/30';
+    } else if (recommendation.includes('SELL')) {
+      return 'bg-red-500/20 text-red-400 border-red-500/30';
+    } else {
+      return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     }
+  };
+
+  // Helper to extract symbol from recommendation string
+  const getSymbol = (recommendation: string) => {
+    const match = recommendation.match(/BUY\s(.*?)\s/);
+    return match ? match[1] : 'N/A';
   };
 
   return (
@@ -39,23 +45,23 @@ export function PersonalTradingAdvisor({ advisorData }: PersonalTradingAdvisorPr
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Signal</TableHead>
+                <TableHead>Action</TableHead> {/* Changed from Signal */}
                 <TableHead>Symbol</TableHead>
                 <TableHead className="text-right">Entry Price</TableHead>
-                <TableHead className="text-right">Target</TableHead>
+                <TableHead className="text-right">Take Profit</TableHead> {/* Changed from Target */}
                 <TableHead className="text-right">Stop Loss</TableHead>
-                <TableHead>Rationale</TableHead>
+                <TableHead>Reasons</TableHead> {/* Changed from Rationale */}
               </TableRow>
             </TableHeader>
             <TableBody>
               {advisorData.map((entry, index) => (
                 <TableRow key={index}>
-                  <TableCell><Badge variant="outline" className={getSignalClass(entry.Signal)}>{entry.Signal}</Badge></TableCell>
-                  <TableCell className="font-medium">{entry.Symbol}</TableCell>
-                  <TableCell className="text-right">{entry['Entry Price']}</TableCell>
-                  <TableCell className="text-right text-green-400">{entry.Target}</TableCell>
-                  <TableCell className="text-right text-red-400">{entry['Stop Loss']}</TableCell>
-                  <TableCell className="text-muted-foreground text-xs">{entry.Rationale}</TableCell>
+                  <TableCell><Badge variant="outline" className={getSignalClass(entry.recommendation)}>{entry.recommendation.split(' ')[0]}</Badge></TableCell> {/* Extract BUY/SELL */}
+                  <TableCell className="font-medium">{getSymbol(entry.recommendation)}</TableCell> {/* Extract Symbol */}
+                  <TableCell className="text-right">{entry.entry_price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-green-400">{entry.take_profit.toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-red-400">{entry.stop_loss.toFixed(2)}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{entry.reasons}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

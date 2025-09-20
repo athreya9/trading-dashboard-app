@@ -20,9 +20,12 @@ interface ModeSwitchProps {
 export function ModeSwitch({ botControl }: ModeSwitchProps) {
   const [isLoading, setIsLoading] = useState(false) // Keep isLoading for button state
 
+  // Ensure botControl is an array before attempting to find
+  const safeBotControl = Array.isArray(botControl) ? botControl : [];
+
   // Extract values from botControl prop
   const getBotControlValue = (param: string) => {
-    const control = botControl.find(item => item.Parameter === param);
+    const control = safeBotControl.find(item => item.Parameter === param);
     return control ? control.Value : 'N/A';
   };
 
@@ -37,7 +40,7 @@ export function ModeSwitch({ botControl }: ModeSwitchProps) {
       const response = await fetch('/api/switch-mode', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application',
+          'Content-Type': 'application/json', // Changed from 'application'
         },
         body: JSON.stringify({ mode: newMode })
       })

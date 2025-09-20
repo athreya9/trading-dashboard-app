@@ -8,9 +8,12 @@ interface MarketStatusProps {
 }
 
 export function MarketStatus({ botControl }: MarketStatusProps) {
+  // Ensure botControl is an array before attempting to find
+  const safeBotControl = Array.isArray(botControl) ? botControl : [];
+
   // Extract values from botControl prop
   const getBotControlValue = (param: string) => {
-    const control = botControl.find(item => item.Parameter === param);
+    const control = safeBotControl.find(item => item.Parameter === param);
     return control ? control.Value : 'N/A';
   };
 

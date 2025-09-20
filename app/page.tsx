@@ -27,32 +27,64 @@ interface DashboardData {
   lastRefreshed: string;
 }
 
+interface NiftyData {
+  currentPrice: number;
+  todaysHigh: number;
+  todaysLow: number;
+  openingPrice: number;
+  previousClose: number;
+}
+
 export default function NiftyQuantumPlatform() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [niftyData, setNiftyData] = useState<NiftyData | null>(null); // Initialize as null
 
-  setDashboardData(newDashboardData);
-          console.log("Dashboard data:", newDashboardData);
-          toast.success("Data refreshed successfully!");
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        const fetchData = async (collectionName: string) => {
+          const q = query(collection(db, collectionName), orderBy('timestamp', 'desc'), limit(50));
+          const snapshot = await getDocs(q);
+          return snapshot.docs.map(doc => doc.data());
+        };
 
-          // Update niftyData state separately
-          if (priceData.length > 0) {
-            const latestNiftyData = priceData[0];
-            setNiftyData({
-              currentPrice: latestNiftyData.close,
-              todaysHigh: latestNiftyData.high,
-              todaysLow: latestNiftyData.low,
-              openingPrice: latestNiftyData.open,
-              previousClose: latestNiftyData.close, // This might not be correct, depends on the data
-            });
-          } else {
-            setNiftyData(null); // Reset if no data
-          }
+        const [advisorOutput, signals, botControl, priceData, tradeLog] = await Promise.all([
+          fetchData('advisor_output'),
+          fetchData('signals'),
+          fetchData('bot_control'),
+          fetchData('price_data'),
+          fetchData('trade_log'),
+        ]);
 
-        } catch (error) {
-          console.error("Error fetching dashboard data:", error);
-          toast.error("Error connecting to backend.", { description: (error as Error).message });
+        const newDashboardData: DashboardData = {
+          advisorOutput,
+          signals,
+          botControl,
+          priceData,
+          tradeLog,
+          lastRefreshed: new Date().toISOString(),
+        };
+
+        setDashboardData(newDashboardData);
+        console.log("Dashboard data:", newDashboardData);
+        toast.success("Data refreshed successfully!");
+
+        // Update niftyData state separately
+        if (priceData.length > 0) {
+          const latestNiftyData = priceData[0];
+          setNiftyData({
+            currentPrice: latestNiftyData.close,
+            todaysHigh: latestNiftyData.high,
+            todaysLow: latestNiftyData.low,
+            openingPrice: latestNiftyData.open,
+            previousClose: latestNiftyData.close, // This might not be correct, depends on the data
+          });
+        } else {
+          setNiftyData(null); // Reset if no data
         }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast.error("Error connecting to backend.", { description: (error as Error).message });
       }
     };
 
@@ -144,7 +176,7 @@ export default function NiftyQuantumPlatform() {
               <Card className="bg-card border-border">
                 <CardContent className="p-4 text-center">
                   <div className="text-lg font-semibold text-foreground">₹{niftyData.openingPrice.toFixed(2)}</div>
-                  <div className="text-xs text-muted-foreground">Opening Price</div>.
+                  <div className="text-xs text-muted-foreground">Opening Price</div>
                 </CardContent>
               </Card>
 
@@ -156,6 +188,7 @@ export default function NiftyQuantumPlatform() {
               </Card>
             </div>
           )}
+        </div>
 
         <TradingAdviceBanner /> {/* This component needs to be updated to use advisorOutput */}
 
